@@ -1,11 +1,18 @@
 import {
+  adv1,
   cliExecute,
   gametimeToInt,
   getClanLounge,
+  mpCost,
   myAdventures,
+  myMaxmp,
+  myMp,
   myPath,
   print,
+  toEffect,
+  toInt,
   use,
+  useFamiliar,
   useSkill,
 } from "kolmafia";
 import {
@@ -13,14 +20,18 @@ import {
   $item,
   $location,
   $skill,
+  $skills,
   adventureMacro,
   AsdonMartin,
+  get,
   getRemainingLiver,
   getRemainingSpleen,
   getRemainingStomach,
   have,
   Session,
+  set,
   StrictMacro,
+  withChoices,
 } from "libram";
 import { getGnomePart, gnomeParts } from "./familiar";
 import {
@@ -82,7 +93,9 @@ function tappedOut(): boolean {
 }
 
 function garboAscend(): void {
-  cliExecute("garbo ascend");
+  if (!tappedOut()) {
+    cliExecute("garbo ascend");
+  }
 }
 
 function garbo(): void {
@@ -92,32 +105,66 @@ function garbo(): void {
 }
 
 function lavaDogs(): void {
-  if (!have(gnomeParts["knee"])) {
-    getGnomePart("knee");
+  // this is bad and ugly but it gets the job done
+
+  if (!get("_lavaDogs", false)) {
+    if (!have(gnomeParts["knee"])) {
+      getGnomePart("knee");
+    }
+
+    cliExecute("edpiece weasel");
+
+    dressup(
+      {
+        hat: $item`The Crown of Ed the Undying`,
+        back: $item`vampyric cloake`,
+        shirt: $item`shoe ad T-shirt`,
+        pants: $item`Cargo Cultist Shorts`,
+        weapon: $item`cursed pirate cutlass`,
+        offhand: $item`Drunkula's wineglass`,
+        acc1: $item`mafia thumb ring`,
+        acc2: $item`lucky gold ring`,
+        acc3: $item`Mr. Cheeng's spectacles`,
+        familiar: gnomeParts["knee"],
+      },
+      $familiar`Reagnimated Gnome`
+    );
+
+    const buffs =
+      $skills`Holiday Weight Gain, Song of Starch, Get Big, Leash of Linguini, Empathy of the Newt, Blood Bond`.filter(
+        have
+      );
+
+    const startingAdventures = myAdventures();
+
+    while (
+      myAdventures() > 0 &&
+      startingAdventures - myAdventures() < 6 &&
+      !$location`The Bubblin' Caldera`.noncombatQueue.split(";").includes("Lava Dogs")
+    ) {
+      adventureMacro($location`The Bubblin' Caldera`, StrictMacro.attack().repeat());
+      const toCast = [
+        ...$skills`Tongue of the Walrus, Cannelloni Cocoon`,
+        ...buffs.filter((skill) => !have(toEffect(skill))),
+        $skill`Cannelloni Cocoon`,
+      ];
+      for (const skill of toCast) {
+        if (myMp() < mpCost(skill)) {
+          use(Math.floor(myMaxmp() / 25), $item`psychokinetic energy blob`);
+        }
+        useSkill(skill);
+      }
+    }
+    set("_lavaDogs", true);
   }
-  dressup(
-    {
-      hat: $item`Iunion Crown`,
-      back: $item`Buddy Bjorn`,
-      shirt: $item`BGE 'cuddly critter' shirt`,
-      pants: $item`repaid diaper`,
-      weapon: $item`garbage sticker`,
-      offhand: $item`Drunkula's wineglass`,
-      acc1: $item`mafia thumb ring`,
-      acc2: $item`lucky gold ring`,
-      acc3: $item`Mr. Cheeng's spectacles`,
-      familiar: gnomeParts["knee"],
-    },
-    $familiar`Reagnimated Gnome`
-  );
-  const startingAdventures = myAdventures();
-  while (
-    myAdventures() > 0 &&
-    startingAdventures - myAdventures() < 6 &&
-    !$location`The Bubblin' Caldera`.noncombatQueue.split(";").includes("Lava Dogs")
-  ) {
-    adventureMacro($location`The Bubblin' Caldera`, StrictMacro.attack().repeat());
-    useSkill($skill`Cannelloni Cocoon`);
+}
+
+function machineElfDupe(): void {
+  if (get("encountersUntilDMTChoice") === 0) {
+    useFamiliar($familiar`Machine Elf`);
+    withChoices({ 1125: `1&iid=${toInt($item`very fancy whiskey`)}` }, () => {
+      adv1($location`The Deep Machine Tunnels`, -1, "");
+    });
   }
 }
 
@@ -125,6 +172,7 @@ function overDrunkTurns(): void {
   if (tappedOut()) {
     cliExecute(`CONSUME VALUE ${OVERDRUNK_MPA} NIGHTCAP`);
     lavaDogs();
+    machineElfDupe();
     cliExecute("garbo ascend");
   }
 }
@@ -205,5 +253,6 @@ export function main(): void {
 
   if (errorStateName) {
     print(`ERROR IN ${errorStateName}`);
+    fullSession.toFile(PARTIAL_FILE);
   }
 }
