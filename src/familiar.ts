@@ -1,4 +1,4 @@
-import { handlingChoice, runChoice, useFamiliar, visitUrl } from "kolmafia";
+import { handlingChoice, Item, runChoice, useFamiliar, visitUrl } from "kolmafia";
 import { $familiar, $item, have } from "libram";
 
 type GnomePart = "ears" | "lungs" | "elbow" | "knee" | "foot";

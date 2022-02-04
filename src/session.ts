@@ -1,4 +1,4 @@
-import { print, sellPrice, toInt } from "kolmafia";
+import { Coinmaster, Item, print, sellPrice, toInt } from "kolmafia";
 import { $item, $items, getSaleValue, Session, sumNumbers } from "libram";
 
 const HIGHLIGHT = "yellow";

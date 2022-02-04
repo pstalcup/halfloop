@@ -1,4 +1,4 @@
-import { equip, myAscensions, todayToString, toSlot, useFamiliar } from "kolmafia";
+import { equip, Familiar, Item, myAscensions, todayToString, toSlot, useFamiliar } from "kolmafia";
 import { get, property, Session, set } from "libram";
 
 export const ALL_TIME_FILE = "halfloop.json";
