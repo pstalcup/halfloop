@@ -1,44 +1,30 @@
 import {
-  adv1,
   cliExecute,
   gametimeToInt,
   getClanLounge,
-  mpCost,
   myAdventures,
-  myMaxmp,
-  myMp,
   myPath,
   print,
-  toEffect,
-  toInt,
   use,
-  useFamiliar,
-  useSkill,
 } from "kolmafia";
 import {
-  $familiar,
+  $class,
   $item,
-  $location,
-  $skill,
-  $skills,
-  adventureMacro,
+  ascend,
   AsdonMartin,
-  get,
   getRemainingLiver,
   getRemainingSpleen,
   getRemainingStomach,
   have,
+  Lifestyle,
+  Paths,
+  questStep,
   Session,
-  set,
-  StrictMacro,
-  withChoices,
 } from "libram";
-import { getGnomePart, gnomeParts } from "./familiar";
 import {
   ALL_TIME_FILE,
   ascensionsToday,
   convertMilliseconds,
-  dressup,
   maybeResetDailyProperties,
   PARTIAL_FILE,
 } from "./lib";
@@ -52,10 +38,10 @@ export function makeStep(
   before: (() => void) | null = null
 ): () => StepResults {
   return () => {
-    if (before) before();
-    const start = Session.current();
     const startTime = gametimeToInt();
     try {
+      if (before) before();
+      const start = Session.current();
       action();
     } catch {
       return {
@@ -104,75 +90,9 @@ function garbo(): void {
   }
 }
 
-function lavaDogs(): void {
-  // this is bad and ugly but it gets the job done
-
-  if (!get("_lavaDogs", false)) {
-    if (!have(gnomeParts["knee"])) {
-      getGnomePart("knee");
-    }
-
-    cliExecute("edpiece weasel");
-
-    dressup(
-      {
-        hat: $item`The Crown of Ed the Undying`,
-        back: $item`vampyric cloake`,
-        shirt: $item`shoe ad T-shirt`,
-        pants: $item`Cargo Cultist Shorts`,
-        weapon: $item`cursed pirate cutlass`,
-        offhand: $item`Drunkula's wineglass`,
-        acc1: $item`mafia thumb ring`,
-        acc2: $item`lucky gold ring`,
-        acc3: $item`Mr. Cheeng's spectacles`,
-        familiar: gnomeParts["knee"],
-      },
-      $familiar`Reagnimated Gnome`
-    );
-
-    const buffs =
-      $skills`Holiday Weight Gain, Song of Starch, Get Big, Leash of Linguini, Empathy of the Newt, Blood Bond`.filter(
-        have
-      );
-
-    const startingAdventures = myAdventures();
-
-    while (
-      myAdventures() > 0 &&
-      startingAdventures - myAdventures() < 6 &&
-      !$location`The Bubblin' Caldera`.noncombatQueue.split(";").includes("Lava Dogs")
-    ) {
-      adventureMacro($location`The Bubblin' Caldera`, StrictMacro.attack().repeat());
-      const toCast = [
-        ...$skills`Tongue of the Walrus, Cannelloni Cocoon`,
-        ...buffs.filter((skill) => !have(toEffect(skill))),
-        $skill`Cannelloni Cocoon`,
-      ];
-      for (const skill of toCast) {
-        if (myMp() < mpCost(skill)) {
-          use(Math.floor(myMaxmp() / 25), $item`psychokinetic energy blob`);
-        }
-        useSkill(skill);
-      }
-    }
-    set("_lavaDogs", true);
-  }
-}
-
-function machineElfDupe(): void {
-  if (get("encountersUntilDMTChoice") === 0) {
-    useFamiliar($familiar`Machine Elf`);
-    withChoices({ 1125: `1&iid=${toInt($item`very fancy whiskey`)}` }, () => {
-      adv1($location`The Deep Machine Tunnels`, -1, "");
-    });
-  }
-}
-
 function overDrunkTurns(): void {
   if (tappedOut()) {
     cliExecute(`CONSUME VALUE ${OVERDRUNK_MPA} NIGHTCAP`);
-    lavaDogs();
-    machineElfDupe();
     cliExecute("garbo ascend");
   }
 }
@@ -184,7 +104,10 @@ function nightCap(): void {
   }
 }
 
-function jumpGash(): void {
+function jumpCsGash(): void {
+  if (!tappedOut()) {
+    throw "Don't ascend with adventures dawg!";
+  }
   cliExecute("phccs_gash");
 }
 
@@ -206,6 +129,29 @@ function postCs(): void {
   use($item`cold medicine cabinet`);
 }
 
+function jumpCasualGash(): void {
+  if (!tappedOut()) {
+    throw "Don't ascend with adventures dawg!";
+  }
+  ascend(
+    Paths.Unrestricted,
+    $class`Seal Cluber`,
+    Lifestyle.casual,
+    "canadia",
+    $item`astral six-pack`
+  );
+}
+
+function casual(): void {
+  cliExecute("loopcasual");
+}
+
+function finishedNs(): void {
+  if (questStep("questL13Final") < 999) {
+    throw "Didn't finish the NS";
+  }
+}
+
 export function main(): void {
   const startTime = gametimeToInt();
   maybeResetDailyProperties();
@@ -213,10 +159,12 @@ export function main(): void {
   const steps: (() => StepResults)[] = [
     makeStep("GARBO1", ascension(1, garboAscend)),
     makeStep("OVERDRUNK1", ascension(1, overDrunkTurns)),
-    makeStep("COMMUNITYSERVICE", ascension(2, communityService), ascension(1, jumpGash)),
+    makeStep("COMMUNITYSERVICE", ascension(2, communityService), ascension(1, jumpCsGash)),
     makeStep("SETUPGARBO2", ascension(2, postCs)),
     makeStep("GARBO2", ascension(2, garbo)),
-    makeStep("NIGHTCAP", ascension(2, nightCap)),
+    makeStep("OVERDRUNK1", ascension(2, overDrunkTurns)),
+    makeStep("CASUAL", ascension(3, casual), ascension(2, jumpCasualGash)),
+    makeStep("GARBO3", ascension(3, garbo), finishedNs),
   ];
 
   const results: StepResults[] = [
