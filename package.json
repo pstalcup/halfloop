@@ -32,10 +32,11 @@
   },
   "dependencies": {
     "core-js": "^3.16.4",
+    "grimoire-kolmafia": "^0.1.0",
     "kolmafia": "^2.1.1",
-    "libram": "^0.6.6"
+    "libram": "^0.6.21"
   },
-  "author": "Captain Scotch",
+  "author": "LASS",
   "license": "ISC",
   "repository": {
     "type": "git",
