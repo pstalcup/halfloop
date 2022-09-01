@@ -1,15 +1,25 @@
 import {
   availableAmount,
   cliExecute,
+  handlingChoice,
+  hippyStoneBroken,
   inebrietyLimit,
+  itemAmount,
+  lastChoice,
   Location,
   myAdventures,
+  myAscensions,
   myDaycount,
   myInebriety,
   myPathId,
   print,
+  pvpAttacksLeft,
+  toInt,
+  useFamiliar,
+  visitUrl,
+  wait,
 } from "kolmafia";
-import { $class, $item, ascend, get, getRemainingLiver, Lifestyle, Paths } from "libram";
+import { $class, $familiar, $item, ascend, get, getRemainingLiver, Lifestyle, Paths } from "libram";
 import { Engine, Quest, step, Task, getTasks } from "grimoire-kolmafia";
 
 const LEG_AFTERCORE = 0;
@@ -28,26 +38,30 @@ function getCurrentLeg(): number {
   return LEG_CASUAL;
 }
 
+function cliExecuteThrow(command: string) {
+  if (!cliExecute(command)) throw `Failed to execute ${command}`;
+}
+
 function garbo(ascend: boolean, after?: string[]): Task[] {
   if (ascend) {
     return [
       {
         name: "Garbo",
         after,
-        do: () => cliExecute("garbo"),
-        completed: () => myAdventures() === 0,
+        do: () => cliExecuteThrow("garbo"),
+        completed: () => myAdventures() === 0 || myInebriety() >= inebrietyLimit(),
       },
       {
         name: "Consume",
         after: ["Garbo"],
         ready: () => myInebriety() === inebrietyLimit(),
-        do: () => cliExecute(`CONSUME NIGHTCAP ${DRUNK_VOA}`),
+        do: () => cliExecuteThrow(`CONSUME NIGHTCAP VALUE ${DRUNK_VOA}`),
         completed: () => myInebriety() > inebrietyLimit(),
       },
       {
         name: "Overdrunk",
-        after: ["Consume"],
-        do: () => cliExecute("garbo ascend"),
+        after: ["Garbo", "Consume"],
+        do: () => cliExecuteThrow("garbo ascend"),
         completed: () => myAdventures() === 0,
       },
     ];
@@ -56,24 +70,62 @@ function garbo(ascend: boolean, after?: string[]): Task[] {
       {
         name: "Garbo",
         after,
-        do: () => cliExecute("garbo"),
+        ready: () => myAdventures() > 0,
+        do: () => cliExecuteThrow("garbo"),
         completed: () => myAdventures() === 0,
       },
     ];
   }
 }
 
+function pvp(): Task[] {
+  return [
+    {
+      name: "BreakStone",
+      completed: hippyStoneBroken,
+      do: () => visitUrl("peevpee.php?action=smashstone&pwd&confirm=on", true),
+    },
+    {
+      name: "Swagger",
+      completed: () => pvpAttacksLeft() > 0,
+      do: () => cliExecute("swagger"),
+    },
+  ];
+}
+
+const dupeTask: Task = {
+  name: "DMT",
+  ready: () =>
+    itemAmount($item`bottle of greedy dog`) > 0 &&
+    get("encountersUntilDMTChoice") < 1 &&
+    myAdventures() > 0,
+  completed: () => get("lastDMTDuplication") >= myAscensions(),
+  do: (): void => {
+    useFamiliar($familiar`Machine Elf`);
+    visitUrl("adventure.php?snarfblat=458");
+    if (handlingChoice() && lastChoice() === 1119) {
+      visitUrl("choice.php?pwd&whichchoice=1119&option=4");
+      visitUrl(
+        `choice.php?whichchoice=1125&pwd&option=1&iid=${toInt($item`bottle of greedy dog`)}`
+      );
+    }
+  },
+  outfit: { familiar: $familiar`Machine Elf` },
+};
+
 const aftercoreQuest: Quest<Task> = {
   name: "Aftercore",
   tasks: [
     ...garbo(true),
+    ...pvp(),
     {
       name: "Ascend",
       after: ["Overdrunk"],
-      do: () => cliExecute("phccs_gash"),
+      do: () => cliExecuteThrow("phccs_gash"),
       completed: () => getCurrentLeg() === LEG_CS,
     },
   ],
+  completed: () => getCurrentLeg() > 0,
 };
 
 const csQuest: Quest<Task> = {
@@ -82,9 +134,12 @@ const csQuest: Quest<Task> = {
     {
       name: "PHCCS",
       completed: () => myPathId() !== Paths.CommunityService.id,
-      do: () => cliExecute("phccs"),
+      do: () => cliExecuteThrow("phccs"),
+      post: () => cliExecute("hagnk all"),
     },
+    dupeTask,
     ...garbo(true, ["PHCCS"]),
+    ...pvp(),
     {
       name: "Ascend",
       after: ["Overdrunk"],
@@ -100,6 +155,7 @@ const csQuest: Quest<Task> = {
         ),
     },
   ],
+  completed: () => getCurrentLeg() > 1,
 };
 
 const casualQuest: Quest<Task> = {
@@ -108,14 +164,15 @@ const casualQuest: Quest<Task> = {
     {
       name: "LoopCasual",
       completed: () => step("questL13Final") === 999,
-      do: () => cliExecute("loopcasual"),
+      do: () => cliExecuteThrow("loopcasual"),
     },
+    dupeTask,
     ...garbo(false, ["LoopCasual"]),
     {
       name: "KeepingTabs",
       after: ["Garbo"],
       completed: () => availableAmount($item`meat stack`) === 0,
-      do: () => cliExecute("keeping-tabs"),
+      do: () => cliExecuteThrow("keeping-tabs"),
       limit: {
         tries: 1,
       },
@@ -124,29 +181,38 @@ const casualQuest: Quest<Task> = {
       name: "Nightcap",
       after: ["KeepingTabs"],
       completed: () => myInebriety() > inebrietyLimit(),
-      do: () => cliExecute("CONSUME NIGHTCAP"),
+      do: () => cliExecuteThrow("CONSUME NIGHTCAP"),
+      post: () => cliExecute("maximize +adv +switch tot"),
     },
+    ...pvp(),
   ],
+  completed: () => getCurrentLeg() > 2,
 };
 
 export function main(args: string = "") {
-  const tasks = getTasks([aftercoreQuest, csQuest, casualQuest].slice(getCurrentLeg()));
+  const tasks = getTasks([aftercoreQuest, csQuest, casualQuest]);
   const engine = new Engine(tasks);
-  const completed = new Set<Task>();
 
-  while (engine.tasks.some((t) => !(completed.has(t) || t.completed()))) {
+  while (engine.tasks.some((t) => engine.available(t))) {
     const task = engine.tasks.find((t) => engine.available(t));
-    if (!task) {
-      const uncompletedTasks = engine.tasks
-        .filter((t) => !(completed.has(t) || t.completed()))
-        .map((t) => t.name);
 
-      print("Uncompleted Tasks:");
+    if (!task) {
+      const uncompletedTasks = engine.tasks.filter((t) => !t.completed()).map((t) => t.name);
       for (const name of uncompletedTasks) {
-        print(name);
+        print(`${name} INCOMPLETE`);
       }
+
       throw "Unable to complete a full day!";
     }
-    (task.do as () => void)();
+
+    engine.tasks.forEach((t: Task) =>
+      print(`TASK: ${t.name} AVAILABLE: ${engine.available(t)} COMPLETED: ${t.completed()}`)
+    );
+    print(`Doing Task: ${task.name}`);
+    wait(3);
+
+    if (!task.completed()) {
+      engine.do(task);
+    }
   }
 }
