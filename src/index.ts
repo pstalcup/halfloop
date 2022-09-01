@@ -27,6 +27,7 @@ const LEG_CS = 1;
 const LEG_CASUAL = 2;
 
 const DRUNK_VOA = 3250;
+const DUPE_ITEM = $item`bottle of greedy dog`;
 
 function getCurrentLeg(): number {
   if (myDaycount() > 1) {
@@ -48,7 +49,7 @@ function garbo(ascend: boolean, after?: string[]): Task[] {
       {
         name: "Garbo",
         after,
-        do: () => cliExecuteThrow("garbo"),
+        do: () => cliExecuteThrow("garbo ascend yachtzeechain"),
         completed: () => myAdventures() === 0 || myInebriety() >= inebrietyLimit(),
       },
       {
@@ -70,9 +71,9 @@ function garbo(ascend: boolean, after?: string[]): Task[] {
       {
         name: "Garbo",
         after,
-        ready: () => myAdventures() > 0,
-        do: () => cliExecuteThrow("garbo"),
-        completed: () => myAdventures() === 0,
+        ready: () => myAdventures() > 0 && myInebriety() < inebrietyLimit(),
+        do: () => cliExecuteThrow("garbo yachtzeechain"),
+        completed: () => myAdventures() === 0 || myInebriety() >= inebrietyLimit(),
       },
     ];
   }
@@ -82,7 +83,7 @@ function pvp(): Task[] {
   return [
     {
       name: "BreakStone",
-      completed: hippyStoneBroken,
+      completed: () => hippyStoneBroken(),
       do: () => visitUrl("peevpee.php?action=smashstone&pwd&confirm=on", true),
     },
     {
@@ -93,25 +94,28 @@ function pvp(): Task[] {
   ];
 }
 
-const dupeTask: Task = {
-  name: "DMT",
-  ready: () =>
-    itemAmount($item`bottle of greedy dog`) > 0 &&
-    get("encountersUntilDMTChoice") < 1 &&
-    myAdventures() > 0,
-  completed: () => get("lastDMTDuplication") >= myAscensions(),
-  do: (): void => {
-    useFamiliar($familiar`Machine Elf`);
-    visitUrl("adventure.php?snarfblat=458");
-    if (handlingChoice() && lastChoice() === 1119) {
-      visitUrl("choice.php?pwd&whichchoice=1119&option=4");
-      visitUrl(
-        `choice.php?whichchoice=1125&pwd&option=1&iid=${toInt($item`bottle of greedy dog`)}`
-      );
-    }
-  },
-  outfit: { familiar: $familiar`Machine Elf` },
-};
+function dupeTask(): Task {
+  return {
+    name: "DMT",
+    ready: () =>
+      itemAmount(DUPE_ITEM) > 0 && get("encountersUntilDMTChoice") < 1 && myAdventures() > 0,
+    completed: () => get("lastDMTDuplication") >= myAscensions(),
+    do: (): void => {
+      useFamiliar($familiar`Machine Elf`);
+      visitUrl("adventure.php?snarfblat=458");
+      if (handlingChoice() && lastChoice() === 1119) {
+        visitUrl("choice.php?pwd&whichchoice=1119&option=4");
+        visitUrl(
+          `choice.php?whichchoice=1125&pwd&option=1&iid=${toInt($item`bottle of greedy dog`)}`
+        );
+      }
+    },
+    limit: {
+      tries: 1,
+    },
+    outfit: { familiar: $familiar`Machine Elf` },
+  };
+}
 
 const aftercoreQuest: Quest<Task> = {
   name: "Aftercore",
@@ -137,7 +141,7 @@ const csQuest: Quest<Task> = {
       do: () => cliExecuteThrow("phccs"),
       post: () => cliExecute("hagnk all"),
     },
-    dupeTask,
+    dupeTask(),
     ...garbo(true, ["PHCCS"]),
     ...pvp(),
     {
@@ -166,7 +170,7 @@ const casualQuest: Quest<Task> = {
       completed: () => step("questL13Final") === 999,
       do: () => cliExecuteThrow("loopcasual"),
     },
-    dupeTask,
+    dupeTask(),
     ...garbo(false, ["LoopCasual"]),
     {
       name: "KeepingTabs",
