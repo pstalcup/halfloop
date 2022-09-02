@@ -1,17 +1,19 @@
 import {
   availableAmount,
   cliExecute,
+  getClanId,
   handlingChoice,
   hippyStoneBroken,
   inebrietyLimit,
+  Item,
   itemAmount,
   lastChoice,
-  Location,
   myAdventures,
   myAscensions,
   myDaycount,
   myInebriety,
   myPathId,
+  myStorageMeat,
   print,
   pvpAttacksLeft,
   toInt,
@@ -19,7 +21,18 @@ import {
   visitUrl,
   wait,
 } from "kolmafia";
-import { $class, $familiar, $item, ascend, get, getRemainingLiver, Lifestyle, Paths } from "libram";
+import {
+  $class,
+  $familiar,
+  $item,
+  $items,
+  ascend,
+  Clan,
+  get,
+  Lifestyle,
+  Paths,
+  getModifier,
+} from "libram";
 import { Engine, Quest, step, Task, getTasks } from "grimoire-kolmafia";
 
 const LEG_AFTERCORE = 0;
@@ -28,6 +41,18 @@ const LEG_CASUAL = 2;
 
 const DRUNK_VOA = 3250;
 const DUPE_ITEM = $item`bottle of greedy dog`;
+const STASH_CLAN = "Alliance from Heck";
+
+function withStashClan(action: (clan: Clan) => void) {
+  const originalClan = Clan.get().id;
+  Clan.join(STASH_CLAN);
+
+  try {
+    action(Clan.get());
+  } finally {
+    Clan.join(originalClan);
+  }
+}
 
 function getCurrentLeg(): number {
   if (myDaycount() > 1) {
@@ -50,7 +75,7 @@ function garbo(ascend: boolean, after?: string[]): Task[] {
         name: "Garbo",
         after,
         do: () => cliExecuteThrow("garbo ascend yachtzeechain"),
-        completed: () => myAdventures() === 0 || myInebriety() >= inebrietyLimit(),
+        completed: () => myAdventures() === 0 || myInebriety() > inebrietyLimit(),
       },
       {
         name: "Consume",
@@ -73,25 +98,26 @@ function garbo(ascend: boolean, after?: string[]): Task[] {
         after,
         ready: () => myAdventures() > 0 && myInebriety() < inebrietyLimit(),
         do: () => cliExecuteThrow("garbo yachtzeechain"),
-        completed: () => myAdventures() === 0 || myInebriety() >= inebrietyLimit(),
+        completed: () => myAdventures() === 0 || myInebriety() > inebrietyLimit(),
       },
     ];
   }
 }
 
-function pvp(): Task[] {
-  return [
-    {
-      name: "BreakStone",
-      completed: () => hippyStoneBroken(),
-      do: () => visitUrl("peevpee.php?action=smashstone&pwd&confirm=on", true),
-    },
-    {
-      name: "Swagger",
-      completed: () => pvpAttacksLeft() > 0,
-      do: () => cliExecute("swagger"),
-    },
-  ];
+function breakStone(): Task {
+  return {
+    name: "BreakStone",
+    completed: () => hippyStoneBroken(),
+    do: () => visitUrl("peevpee.php?action=smashstone&pwd&confirm=on", true),
+  };
+}
+
+function swagger(): Task {
+  return {
+    name: "Swagger",
+    completed: () => pvpAttacksLeft() > 0,
+    do: () => cliExecute("swagger"),
+  };
 }
 
 function dupeTask(): Task {
@@ -105,9 +131,7 @@ function dupeTask(): Task {
       visitUrl("adventure.php?snarfblat=458");
       if (handlingChoice() && lastChoice() === 1119) {
         visitUrl("choice.php?pwd&whichchoice=1119&option=4");
-        visitUrl(
-          `choice.php?whichchoice=1125&pwd&option=1&iid=${toInt($item`bottle of greedy dog`)}`
-        );
+        visitUrl(`choice.php?whichchoice=1125&pwd&option=1&iid=${toInt(DUPE_ITEM)}`);
       }
     },
     limit: {
@@ -120,11 +144,18 @@ function dupeTask(): Task {
 const aftercoreQuest: Quest<Task> = {
   name: "Aftercore",
   tasks: [
+    breakStone(),
     ...garbo(true),
-    ...pvp(),
+    swagger(),
+    {
+      name: "Borrow",
+      after: ["Overdrunk"],
+      do: () => withStashClan((clan) => clan.take($items`moveable feast`)),
+      completed: () => availableAmount($item`moveable feast`) > 0,
+    },
     {
       name: "Ascend",
-      after: ["Overdrunk"],
+      after: ["Borrow"],
       do: () => cliExecuteThrow("phccs_gash"),
       completed: () => getCurrentLeg() === LEG_CS,
     },
@@ -138,12 +169,22 @@ const csQuest: Quest<Task> = {
     {
       name: "PHCCS",
       completed: () => myPathId() !== Paths.CommunityService.id,
-      do: () => cliExecuteThrow("phccs"),
-      post: () => cliExecute("hagnk all"),
+      do: () => cliExecuteThrow("phccs softcore"),
     },
+    {
+      name: "Hagnk",
+      completed: () => myStorageMeat() === 0,
+      do: () => cliExecuteThrow("hagnk all"),
+    },
+    {
+      name: "Return",
+      after: ["PHCCS"],
+      do: () => withStashClan((clan) => clan.put($items`moveable feast`)),
+      completed: () => availableAmount($item`moveable feast`) == 0,
+    },
+    breakStone(),
     dupeTask(),
-    ...garbo(true, ["PHCCS"]),
-    ...pvp(),
+    ...garbo(true, ["Return"]),
     {
       name: "Ascend",
       after: ["Overdrunk"],
@@ -158,6 +199,7 @@ const csQuest: Quest<Task> = {
           $item`astral six-pack`
         ),
     },
+    swagger(),
   ],
   completed: () => getCurrentLeg() > 1,
 };
@@ -170,6 +212,7 @@ const casualQuest: Quest<Task> = {
       completed: () => step("questL13Final") === 999,
       do: () => cliExecuteThrow("loopcasual"),
     },
+    breakStone(),
     dupeTask(),
     ...garbo(false, ["LoopCasual"]),
     {
@@ -186,9 +229,14 @@ const casualQuest: Quest<Task> = {
       after: ["KeepingTabs"],
       completed: () => myInebriety() > inebrietyLimit(),
       do: () => cliExecuteThrow("CONSUME NIGHTCAP"),
-      post: () => cliExecute("maximize +adv +switch tot"),
     },
-    ...pvp(),
+    {
+      name: "Pajamas",
+      after: ["Nightcap"],
+      completed: () => getModifier("Adventures") > 0,
+      do: () => cliExecute("maximize +adv +fites +switch tot"),
+    },
+    swagger(),
   ],
   completed: () => getCurrentLeg() > 2,
 };
@@ -219,4 +267,5 @@ export function main(args: string = "") {
       engine.do(task);
     }
   }
+  print(`Done for today!`);
 }
