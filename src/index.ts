@@ -171,7 +171,7 @@ const aftercoreQuest: Quest<Task> = {
     {
       name: "Ascend",
       after: ["Borrow"],
-      do: () => cliExecuteThrow("phccs_gash"),
+      do: () => cliExecuteThrow("phccs_gash softcore"),
       completed: () => getCurrentLeg() === LEG_CS,
     },
   ],
