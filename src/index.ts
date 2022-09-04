@@ -1,7 +1,7 @@
 import {
   availableAmount,
   cliExecute,
-  getClanId,
+  getCampground,
   handlingChoice,
   hippyStoneBroken,
   inebrietyLimit,
@@ -17,6 +17,7 @@ import {
   print,
   pvpAttacksLeft,
   toInt,
+  use,
   useFamiliar,
   visitUrl,
   wait,
@@ -32,6 +33,8 @@ import {
   Lifestyle,
   Paths,
   getModifier,
+  have,
+  withChoice,
 } from "libram";
 import { Engine, Quest, step, Task, getTasks } from "grimoire-kolmafia";
 
@@ -39,6 +42,7 @@ const LEG_AFTERCORE = 0;
 const LEG_CS = 1;
 const LEG_CASUAL = 2;
 
+const VOA = get("valueOfAdventure");
 const DRUNK_VOA = 3250;
 const DUPE_ITEM = $item`bottle of greedy dog`;
 const STASH_CLAN = "Alliance from Heck";
@@ -115,8 +119,19 @@ function breakStone(): Task {
 function swagger(): Task {
   return {
     name: "Swagger",
-    completed: () => pvpAttacksLeft() > 0,
-    do: () => cliExecute("swagger"),
+    ready: () => pvpAttacksLeft() > 0,
+    completed: () => pvpAttacksLeft() == 0,
+    do: () => {
+      if (!get("_fireStartingKitUsed") && have($item`CSA fire-starting kit`)) {
+        withChoice(595, 1, () => {
+          use($item`CSA fire-starting kit`);
+        });
+      }
+      while (get("_meteoriteAdesUsed") < 3 && have($item`Meteorite-Ade`)) {
+        use($item`Meteorite-Ade`);
+      }
+      cliExecute("swagger");
+    },
   };
 }
 
@@ -233,17 +248,39 @@ const casualQuest: Quest<Task> = {
     {
       name: "Pajamas",
       after: ["Nightcap"],
-      completed: () => getModifier("Adventures") > 0,
+      completed: () => getModifier("Adventures") > 20, // passives and stuff mean that this is likely
       do: () => cliExecute("maximize +adv +fites +switch tot"),
+    },
+    {
+      name: "Clockwork Maid",
+      after: ["Pajamas"],
+      ready: () => getModifier("Adventures") + 40 < 200,
+      completed: () => !!getCampground()["clockwork maid"],
+      do: () => {
+        if (!have($item`clockwork maid`)) {
+          buy($item`clockwork maid`, 1, VOA * 8);
+        }
+        if (have($item`clockwork maid`)) {
+          use($item`clockwork maid`);
+        }
+      },
+      limit: { tries: 1 },
     },
     swagger(),
   ],
   completed: () => getCurrentLeg() > 2,
 };
 
+function logTasks(engine: Engine) {
+  engine.tasks.forEach((t: Task) =>
+    print(`TASK: ${t.name} AVAILABLE: ${engine.available(t)} COMPLETED: ${t.completed()}`)
+  );
+}
+
 export function main(args: string = "") {
   const tasks = getTasks([aftercoreQuest, csQuest, casualQuest]);
   const engine = new Engine(tasks);
+  logTasks(engine);
 
   while (engine.tasks.some((t) => engine.available(t))) {
     const task = engine.tasks.find((t) => engine.available(t));
@@ -257,9 +294,7 @@ export function main(args: string = "") {
       throw "Unable to complete a full day!";
     }
 
-    engine.tasks.forEach((t: Task) =>
-      print(`TASK: ${t.name} AVAILABLE: ${engine.available(t)} COMPLETED: ${t.completed()}`)
-    );
+    logTasks(engine);
     print(`Doing Task: ${task.name}`);
     wait(3);
 
@@ -268,4 +303,7 @@ export function main(args: string = "") {
     }
   }
   print(`Done for today!`);
+}
+function buy(arg0: Item, arg1: number, arg2: number): void {
+  throw new Error("Function not implemented.");
 }
