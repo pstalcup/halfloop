@@ -120,3 +120,11 @@ export function getSession(key: Leg): number {
 export function inebrietyLimitIgnoreFamiliar() {
   return inebrietyLimit() - (myFamiliar() === $familiar`stooper` ? 1 : 0);
 }
+
+export function nep(): Task {
+  return {
+    name: "NEP",
+    do: () => cliExecuteThrow("duffo go"),
+    completed: () => get("_questPartyFair") !== "unstarted",
+  };
+}

@@ -1,15 +1,14 @@
 import { Task } from "grimoire-kolmafia";
 import { inebrietyLimit, myAdventures, myFamiliar, myInebriety } from "kolmafia";
-import { $familiar } from "libram";
 import { DRUNK_VOA } from "./constants";
-import { cliExecuteThrow, distillate, inebrietyLimitIgnoreFamiliar } from "./util";
+import { cliExecuteThrow, distillate, nep, inebrietyLimitIgnoreFamiliar } from "./util";
 
 export function garbo(ascend: boolean, after?: string[]): Task[] {
   if (ascend) {
     return [
+      nep(),
       {
         name: "Garbo",
-        after,
         do: () => cliExecuteThrow("garbo ascend yachtzeechain"),
         completed: () => myAdventures() === 0 || myInebriety() > inebrietyLimitIgnoreFamiliar(),
       },
@@ -19,7 +18,7 @@ export function garbo(ascend: boolean, after?: string[]): Task[] {
         after: ["Distillate"],
         ready: () => myInebriety() === inebrietyLimit(),
         do: () => cliExecuteThrow(`CONSUME NIGHTCAP VALUE ${DRUNK_VOA}`),
-        completed: () => myInebriety() > inebrietyLimitIgnoreFamiliar(),
+        completed: () => myInebriety() > inebrietyLimit(),
       },
       {
         name: "Overdrunk",
@@ -30,6 +29,7 @@ export function garbo(ascend: boolean, after?: string[]): Task[] {
     ];
   } else {
     return [
+      nep(),
       {
         name: "Garbo",
         after,
