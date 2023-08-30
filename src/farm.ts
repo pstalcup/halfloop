@@ -6,20 +6,25 @@ import {
   $skill,
   get,
   getRemainingLiver,
+  getRemainingStomach,
   have,
   withChoice,
 } from "libram";
-import { cliExecuteThrow, tapped, willAscend } from "./util";
+import { args, cliExecuteThrow, tapped, willAscend } from "./util";
 import {
   cliExecute,
+  drink,
+  eat,
   hippyStoneBroken,
   inebrietyLimit,
   myAdventures,
   myAscensions,
   myFamiliar,
+  myFullness,
   myInebriety,
   numericModifier,
   pvpAttacksLeft,
+  retrieveItem,
   use,
   useSkill,
   visitUrl,
@@ -41,17 +46,19 @@ export const farm: Quest<Task> = {
     },
     {
       name: "break stone",
+      ready: () => args.pvp,
       completed: () => hippyStoneBroken(),
       do: () => visitUrl("peevpee.php?action=smashstone&pwd&confirm=on", true),
     },
     {
       name: "duffo",
-      completed: () => get("_questPartyFair") !== "unstarted" || get("_questPartyFairQuest") !== "",
+      ready: () => ["", "food", "booze"].includes(get("_questPartyFairQuest")),
+      completed: () => get("_questPartyFair") !== "unstarted",
       do: () => cliExecuteThrow("duffo go"),
     },
     {
       name: "swagger",
-      ready: () => hippyStoneBroken() && pvpAttacksLeft() > 0 && myAdventures() === 0,
+      ready: () => args.pvp && hippyStoneBroken() && pvpAttacksLeft() > 0 && myAdventures() === 0,
       completed: () => pvpAttacksLeft() === 0,
       do: (): void => {
         if (!get("_fireStartingKitUsed") && have($item`CSA fire-starting kit`)) {
@@ -64,6 +71,30 @@ export const farm: Quest<Task> = {
         }
         cliExecute("swagger");
       },
+    },
+    {
+      name: "burnsger",
+      ready: () => myInebriety() >= 2 && getRemainingStomach() >= 4,
+      completed: () => get("_mrBurnsgerEaten"),
+      prepare: (): void => {
+        if (!get("_milkOfMagnesiumUsed")) {
+          retrieveItem($item`milk of magnesium`);
+          use($item`milk of magnesium`);
+        }
+      },
+      do: () => eat($item`Mr. Burnsger`),
+    },
+    {
+      name: "doc clock",
+      ready: () => myFullness() >= 2 && getRemainingLiver() >= 4,
+      completed: () => get("_docClocksThymeCocktailDrunk"),
+      do: () => drink($item`Doc Clock's thyme cocktail`),
+    },
+    {
+      name: "mad liquor",
+      ready: () => myFullness() >= 1 && getRemainingLiver() >= 3,
+      completed: () => get("_madLiquorDrunk"),
+      do: () => drink($item`The Mad Liquor`),
     },
     {
       name: "stooper",

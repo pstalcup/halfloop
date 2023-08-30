@@ -15,7 +15,7 @@ export function tapped(ascend: boolean): boolean {
   // you are done for today if:
   // * when ascending, you have 0 turns
   // * when not ascending, you are overdrunk
-  return (ascend && myAdventures() === 0) || (!ascend && myInebriety() > inebrietyLimit());
+  return myInebriety() > inebrietyLimit() && (!ascend || myAdventures() === 0);
 }
 
 export function willAscend(): boolean {
