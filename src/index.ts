@@ -13,10 +13,15 @@ export function main(command = ""): void {
   const engine = new Engine(tasks);
 
   if (args.list) {
-    print(`Tasks to run:`);
+    print(`All tasks to run:`);
     for (const task of tasks) {
-      print(`* ${task.name}`);
+      const available = engine.available(task);
+      print(
+        `* ${task.name} ${available ? "available" : "unavailable"}`,
+        available ? "black" : "red"
+      );
     }
+    print(`Next task: ${engine.getNextTask()?.name}`);
     return;
   }
 
