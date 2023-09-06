@@ -1,33 +1,16 @@
 import { Quest, Task } from "grimoire-kolmafia";
-import {
-  $effect,
-  $familiar,
-  $item,
-  $skill,
-  get,
-  getRemainingLiver,
-  getRemainingStomach,
-  have,
-  withChoice,
-} from "libram";
+import { $effect, $skill, get, have } from "libram";
 import { args, cliExecuteThrow, tapped, willAscend } from "./util";
 import {
-  cliExecute,
-  drink,
-  eat,
-  hippyStoneBroken,
-  inebrietyLimit,
+  getShop,
+  Item,
+  mallPrice,
   myAdventures,
   myAscensions,
-  myFamiliar,
-  myFullness,
-  myInebriety,
   numericModifier,
-  pvpAttacksLeft,
-  retrieveItem,
-  use,
+  repriceShop,
+  shopPrice,
   useSkill,
-  visitUrl,
 } from "kolmafia";
 
 export const farm: Quest<Task> = {
@@ -39,76 +22,16 @@ export const farm: Quest<Task> = {
       do: () => cliExecuteThrow("hagnk all"),
     },
     {
-      name: "Breakfast",
+      name: "breakfast",
       do: () => cliExecuteThrow("breakfast"),
       completed: () => get("lastBreakfast") !== -1 || get("breakfastCompleted"),
       limit: { tries: 1 },
-    },
-    {
-      name: "break stone",
-      ready: () => args.pvp,
-      completed: () => hippyStoneBroken(),
-      do: () => visitUrl("peevpee.php?action=smashstone&pwd&confirm=on", true),
     },
     {
       name: "duffo",
       ready: () => ["", "food", "booze"].includes(get("_questPartyFairQuest")),
       completed: () => get("_questPartyFair") !== "unstarted",
       do: () => cliExecuteThrow("duffo go"),
-    },
-    {
-      name: "swagger",
-      ready: () => args.pvp && hippyStoneBroken() && pvpAttacksLeft() > 0 && myAdventures() === 0,
-      completed: () => pvpAttacksLeft() === 0,
-      do: (): void => {
-        if (!get("_fireStartingKitUsed") && have($item`CSA fire-starting kit`)) {
-          withChoice(595, 1, () => {
-            use($item`CSA fire-starting kit`);
-          });
-        }
-        while (get("_meteoriteAdesUsed") < 3 && have($item`Meteorite-Ade`)) {
-          use($item`Meteorite-Ade`);
-        }
-        cliExecute("swagger");
-      },
-    },
-    {
-      name: "burnsger",
-      ready: () => myInebriety() >= 2 && getRemainingStomach() >= 4,
-      completed: () => get("_mrBurnsgerEaten"),
-      prepare: (): void => {
-        if (!get("_milkOfMagnesiumUsed")) {
-          retrieveItem($item`milk of magnesium`);
-          use($item`milk of magnesium`);
-        }
-      },
-      do: () => eat($item`Mr. Burnsger`),
-    },
-    {
-      name: "doc clock",
-      ready: () => myFullness() >= 2 && getRemainingLiver() >= 4,
-      completed: () => get("_docClocksThymeCocktailDrunk"),
-      do: () => drink($item`Doc Clock's thyme cocktail`),
-    },
-    {
-      name: "mad liquor",
-      ready: () => myFullness() >= 1 && getRemainingLiver() >= 3,
-      completed: () => get("_madLiquorDrunk"),
-      do: () => drink($item`The Mad Liquor`),
-    },
-    {
-      name: "stooper",
-      ready: () =>
-        myAdventures() === 0 && getRemainingLiver() === 0 && myFamiliar() !== $familiar`Stooper`,
-      completed: () => getRemainingLiver() === 0 && myFamiliar() === $familiar`Stooper`,
-      do: () => cliExecuteThrow("drink stillsuit distillate"),
-      outfit: { familiar: $familiar`Stooper` },
-    },
-    {
-      name: "nightcap",
-      ready: () => getRemainingLiver() === 0 && myFamiliar() === $familiar`Stooper`,
-      completed: () => myInebriety() > inebrietyLimit(),
-      do: () => cliExecuteThrow("CONSUME NIGHTCAP"),
     },
     {
       name: "garbo ascend",
@@ -118,12 +41,19 @@ export const farm: Quest<Task> = {
     },
     {
       name: "garbo",
-      ready: () => !willAscend(),
+      ready: () => args.adventures === 0 && !willAscend(),
       completed: () => tapped(false),
-      do: () => cliExecuteThrow("garbo"),
+      do: () => cliExecuteThrow(`garbo`),
+    },
+    {
+      name: "limited garbo",
+      ready: () => args.adventures > 0 && !willAscend(),
+      completed: () => myAdventures() <= args.adventures,
+      do: () => cliExecuteThrow(`garbo -${args.adventures}`),
     },
     {
       name: "pajamas",
+      ready: () => !willAscend() && args.adventures === 0,
       prepare: (): void => {
         if (!get("_aug13Cast") || have($effect`Offhand Remarkable`)) {
           useSkill($skill`Aug. 13th: Left/Off Hander's Day!`);
@@ -139,6 +69,15 @@ export const farm: Quest<Task> = {
       ready: () => !willAscend(),
       completed: () => get("_keepingTabs", "") !== "",
       do: () => cliExecuteThrow("keeping-tabs-dev"),
+      post: (): void => {
+        const shop = getShop();
+        for (const itemStr of Object.keys(shop)) {
+          const item = Item.get(itemStr);
+          if (shopPrice(item) === 999999999) {
+            repriceShop(Math.floor(mallPrice(item) * 0.95), item);
+          }
+        }
+      },
     },
   ],
 };
