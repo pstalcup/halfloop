@@ -19,7 +19,7 @@ import {
   have,
   withProperty,
 } from "libram";
-import { cliExecuteThrow, willAscend } from "./util";
+import { args, cliExecuteThrow, external, willAscend } from "./util";
 
 const shouldNightcap = () => getRemainingLiver() === 0 && myFamiliar() === $familiar`Stooper`;
 
@@ -30,7 +30,11 @@ export const diet: Quest<Task> = {
   tasks: [
     {
       name: "burnsger",
-      ready: () => have($item`Mr. Burnsger`) && myInebriety() >= 2 && getRemainingStomach() >= 4,
+      ready: () =>
+        args.batfellow &&
+        have($item`Mr. Burnsger`) &&
+        myInebriety() >= 2 &&
+        getRemainingStomach() >= 4,
       completed: () => get("_mrBurnsgerEaten"),
       prepare: (): void => {
         if (!get("_milkOfMagnesiumUsed")) {
@@ -43,13 +47,20 @@ export const diet: Quest<Task> = {
     {
       name: "doc clock",
       ready: () =>
-        have($item`Doc Clock's thyme cocktail`) && myFullness() >= 2 && getRemainingLiver() >= 4,
+        args.batfellow &&
+        have($item`Doc Clock's thyme cocktail`) &&
+        myFullness() >= 2 &&
+        getRemainingLiver() >= 4,
       completed: () => get("_docClocksThymeCocktailDrunk"),
       do: () => drink($item`Doc Clock's thyme cocktail`),
     },
     {
       name: "mad liquor",
-      ready: () => have($item`The Mad Liquor`) && myFullness() >= 1 && getRemainingLiver() >= 3,
+      ready: () =>
+        args.batfellow &&
+        have($item`The Mad Liquor`) &&
+        myFullness() >= 1 &&
+        getRemainingLiver() >= 3,
       completed: () => get("_madLiquorDrunk"),
       do: () => drink($item`The Mad Liquor`),
     },
@@ -66,13 +77,13 @@ export const diet: Quest<Task> = {
       ready: () => shouldNightcap() && willAscend(),
       completed: () => myInebriety() > inebrietyLimit(),
       do: () =>
-        withProperty("valueOfAdventure", OVERDRUNK_VOA, () => cliExecuteThrow("CONSUME NIGHTCAP")),
+        withProperty("valueOfAdventure", OVERDRUNK_VOA, () => external("consume", "NIGHTCAP")),
     },
     {
       name: "nightcap",
       ready: () => shouldNightcap() && !willAscend(),
       completed: () => myInebriety() > inebrietyLimit(),
-      do: () => cliExecuteThrow("CONSUME NIGHTCAP"),
+      do: () => external("consume", "NIGHTCAP"),
     },
   ],
 };

@@ -1,6 +1,6 @@
 import { Quest, Task } from "grimoire-kolmafia";
-import { $effect, $skill, get, have } from "libram";
-import { args, cliExecuteThrow, tapped, willAscend } from "./util";
+import { $effect, $item, $skill, get, have } from "libram";
+import { args, cliExecuteThrow, external, tapped, willAscend } from "./util";
 import {
   getShop,
   Item,
@@ -10,6 +10,7 @@ import {
   numericModifier,
   repriceShop,
   shopPrice,
+  use,
   useSkill,
 } from "kolmafia";
 
@@ -20,6 +21,11 @@ export const farm: Quest<Task> = {
       name: "hagnk",
       completed: () => get("lastEmptiedStorage") === myAscensions(),
       do: () => cliExecuteThrow("hagnk all"),
+    },
+    {
+      name: "raindoh",
+      completed: () => have($item`empty Rain-Doh can`),
+      do: () => use($item`can of Rain-Doh`),
     },
     {
       name: "breakfast",
@@ -37,19 +43,19 @@ export const farm: Quest<Task> = {
       name: "garbo ascend",
       ready: () => willAscend(),
       completed: () => tapped(true),
-      do: () => cliExecuteThrow("garbo ascend"),
+      do: () => external("garbo", "ascend"),
     },
     {
       name: "garbo",
       ready: () => args.adventures === 0 && !willAscend(),
       completed: () => tapped(false),
-      do: () => cliExecuteThrow(`garbo`),
+      do: () => external("garbo"),
     },
     {
       name: "limited garbo",
       ready: () => args.adventures > 0 && !willAscend(),
       completed: () => myAdventures() <= args.adventures,
-      do: () => cliExecuteThrow(`garbo -${args.adventures}`),
+      do: () => external("garbo", `-${args.adventures}`),
     },
     {
       name: "pajamas",
@@ -68,7 +74,7 @@ export const farm: Quest<Task> = {
       name: "keeping-tabs",
       ready: () => !willAscend(),
       completed: () => get("_keepingTabs", "") !== "",
-      do: () => cliExecuteThrow("keeping-tabs-dev"),
+      do: () => external("keeping_tabs"),
       post: (): void => {
         const shop = getShop();
         for (const itemStr of Object.keys(shop)) {

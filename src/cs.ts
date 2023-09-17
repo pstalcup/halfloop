@@ -1,6 +1,6 @@
 import { Quest, Task } from "grimoire-kolmafia";
 import { get } from "libram";
-import { cliExecuteThrow, tapped } from "./util";
+import { args, external, tapped } from "./util";
 import { myAdventures, pvpAttacksLeft } from "kolmafia";
 
 export const cs: Quest<Task> = {
@@ -15,13 +15,13 @@ export const cs: Quest<Task> = {
       },
       ready: () => tapped(true),
       completed: () => get("ascensionsToday") > 0,
-      do: () => cliExecuteThrow("phccs_gash softcore"),
+      do: () => external("phccs_gash", { key: "class", value: `${args.cs_class}` }),
     },
     {
       name: "phccs",
       ready: () => get("ascensionsToday") === 1,
       completed: () => get("questL13Final") === "finished",
-      do: () => cliExecuteThrow("phccs"),
+      do: () => external("phccs"),
     },
   ],
   completed: () => get("ascensionsToday") === 1 && get("questL13Final") === "finished",

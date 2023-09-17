@@ -1,9 +1,9 @@
 import { Args, Engine, getTasks } from "grimoire-kolmafia";
-import { args } from "./util";
+import { args, printArgs } from "./util";
 import { farm } from "./farm";
 import { cs } from "./cs";
 import { diet } from "./diet";
-import { print } from "kolmafia";
+import { print, wait } from "kolmafia";
 import { pvp } from "./pvp";
 
 export function main(command = ""): void {
@@ -11,6 +11,15 @@ export function main(command = ""): void {
 
   const tasks = getTasks([pvp, cs, diet, farm]);
   const engine = new Engine(tasks);
+
+  if (args.help) {
+    Args.showHelp(args);
+    return;
+  }
+
+  print("Welcome to Halfloop");
+  print(" Run Options:");
+  print(" ");
 
   if (args.list) {
     print(`All tasks to run:`);
@@ -24,6 +33,12 @@ export function main(command = ""): void {
     print(`Next task: ${engine.getNextTask()?.name}`);
     return;
   }
+
+  printArgs();
+
+  if (args.args) return;
+
+  wait(5);
 
   try {
     engine.run();
