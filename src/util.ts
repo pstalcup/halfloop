@@ -1,15 +1,24 @@
 import { Args } from "grimoire-kolmafia";
 import {
+  choiceFollowsFight,
   Class,
   cliExecute,
+  getAutoAttack,
   inebrietyLimit,
+  inMultiFight,
   myAdventures,
   myFamiliar,
   myInebriety,
   print,
+  runCombat,
+  setAutoAttack,
+  setCcs,
   toClass,
+  todayToString,
+  visitUrl,
+  writeCcs,
 } from "kolmafia";
-import { $class, $familiar, get } from "libram";
+import { $class, $familiar, get, set, StrictMacro } from "libram";
 
 export const args = Args.create("halfloop", "Loop your brains out (on live tv)", {
   pvp: Args.boolean({ help: "Run PVP fites", default: true }),
@@ -47,6 +56,7 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
   // different modes
   list: Args.flag({ help: "list all tasks and then exit" }),
   args: Args.flag({ help: "print out a message showing what args will be used" }),
+  sleep: Args.flag({ help: "sleep before executing main loop" }),
 });
 
 export function printArgs(): void {
@@ -92,4 +102,64 @@ export function external(
 ): void {
   const strArgs = scriptArgs.map((a) => (typeof a === "string" ? a : `${a.key}="${a.value}"`));
   cliExecuteThrow([args[`${name}_command`], ...strArgs].join(" "));
+}
+
+function makeCcs<M extends StrictMacro>(macro: M) {
+  writeCcs(`[default]\n"${macro.toString()}"`, "halfloop");
+  setCcs("halfloop");
+}
+
+function runCombatBy<T>(initiateCombatAction: () => T) {
+  try {
+    const result = initiateCombatAction();
+    while (inMultiFight()) runCombat();
+    if (choiceFollowsFight()) visitUrl("choice.php");
+    return result;
+  } catch (e) {
+    throw `Combat exception! Last macro error: ${get("lastMacroError")}. Exception ${e}.`;
+  }
+}
+
+/**
+ * Attempt to perform a nonstandard combat-starting Action with a Macro
+ * @param macro The Macro to attempt to use
+ * @param action The combat-starting action to attempt
+ * @param tryAuto Whether or not we should try to resolve the combat with an autoattack; autoattack macros can fail against special monsters, and thus we have to submit a macro via CCS regardless.
+ * @returns The output of your specified action function (typically void)
+ */
+export function withMacro<T, M extends StrictMacro>(macro: M, action: () => T, tryAuto = false): T {
+  if (getAutoAttack() !== 0) setAutoAttack(0);
+  if (tryAuto) macro.setAutoAttack();
+  makeCcs(macro);
+  try {
+    return runCombatBy(action);
+  } finally {
+    if (tryAuto) setAutoAttack(0);
+  }
+}
+
+const dailyNumericProperties = ["halfloop_turnsSpent", "halfloop_swagger"] as const;
+export type DailyNumericProperty = typeof dailyNumericProperties[number];
+export const HALFLOOP_DAILY_FLAG = "halfloop_dailyFlag";
+
+export function daily<T>(
+  callback: (functions: {
+    get: (property: DailyNumericProperty) => number;
+    set: (property: DailyNumericProperty, value: number) => void;
+  }) => T
+): T {
+  if (get(HALFLOOP_DAILY_FLAG) !== todayToString()) {
+    set(HALFLOOP_DAILY_FLAG, todayToString());
+    for (const prop of dailyNumericProperties) {
+      set(prop, 0);
+    }
+  }
+  return callback({
+    get: (property: DailyNumericProperty) => get(property, 0),
+    set: (property: DailyNumericProperty, value: number) => set(property, value),
+  });
+}
+
+export function fmt(value: number | string): string {
+  return `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }

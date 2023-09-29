@@ -1,13 +1,17 @@
 import { Args, Engine, getTasks } from "grimoire-kolmafia";
-import { args, printArgs } from "./util";
+import { args, daily, fmt, printArgs } from "./util";
 import { farm } from "./farm";
 import { cs } from "./cs";
 import { diet } from "./diet";
-import { print, wait } from "kolmafia";
+import { print, totalTurnsPlayed, wait } from "kolmafia";
 import { pvp } from "./pvp";
+import { get } from "libram";
 
 export function main(command = ""): void {
   Args.fill(args, command);
+
+  const startingTurns = totalTurnsPlayed();
+  const startingSwagger = get("availableSwagger");
 
   const tasks = getTasks([pvp, cs, diet, farm]);
   const engine = new Engine(tasks);
@@ -38,11 +42,31 @@ export function main(command = ""): void {
 
   if (args.args) return;
 
-  wait(5);
+  if (args.sleep) wait(5);
 
   try {
     engine.run();
   } finally {
     engine.destruct();
+
+    const endingTurns = totalTurnsPlayed();
+    const endingSwagger = get("availableSwagger");
+
+    const [totalTurnsSpent, totalSwagger] = daily(({ get, set }) => {
+      set("halfloop_turnsSpent", get("halfloop_turnsSpent") + (endingTurns - startingTurns));
+      set("halfloop_swagger", get("halfloop_swagger") + (endingSwagger - startingSwagger));
+      return [get("halfloop_turnsSpent"), get("halfloop_swagger")];
+    });
+
+    const meat = get("garboResultsMeat", 0);
+    const item = get("garboResultsItems", 0);
+    const embezzlers = get("garboEmbezzlerCount", 0);
+    const yachtzees = get("garboYachtzeeCount", 0);
+
+    print("Final Results");
+    print(`* Total Turns Spent: ${totalTurnsSpent}`);
+    print(`* Garbo Results: ${fmt(meat)} meat + ${fmt(item)} items = ${fmt(meat + item)}`);
+    print(`* Garbo Actions: ${fmt(embezzlers)} embezzlers and ${fmt(yachtzees)} yachtzees`);
+    print(`* Swagger: ${fmt(totalSwagger)}`);
   }
 }
