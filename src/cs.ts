@@ -13,9 +13,9 @@ export const cs: Quest<Task> = {
           throw `You shouldn't be ascending with ${myAdventures()} adventures and ${pvpAttacksLeft()} fites left!`;
         }
       },
-      ready: () => tapped(true),
+      ready: () => tapped(true) && args.ascend,
       completed: () => get("ascensionsToday") > 0,
-      do: () => external("phccs_gash", { key: "class", value: `${args.cs_class}` }),
+      do: () => external("phccs_gash", { key: "class", value: `${args.class}` }),
     },
     {
       name: "phccs",

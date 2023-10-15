@@ -9,16 +9,18 @@ import {
   myAdventures,
   myFamiliar,
   myInebriety,
+  Path,
   print,
   runCombat,
   setAutoAttack,
   setCcs,
   toClass,
   todayToString,
+  toPath,
   visitUrl,
   writeCcs,
 } from "kolmafia";
-import { $class, $familiar, get, set, StrictMacro } from "libram";
+import { $class, $familiar, $path, get, set, StrictMacro } from "libram";
 
 export const args = Args.create("halfloop", "Loop your brains out (on live tv)", {
   pvp: Args.boolean({ help: "Run PVP fites", default: true }),
@@ -45,13 +47,21 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
     help: "how to invoke phccs",
     default: "phccs",
   }),
-  cs_class: Args.custom<Class>(
+  class: Args.custom<Class>(
     {
       help: "what class to run PHCCS as",
       default: $class`Pastamancer`,
     },
     (v: string) => toClass(v),
     "CLASS"
+  ),
+  path: Args.custom<Path>(
+    {
+      help: "What path to run as",
+      default: $path`Community Service`,
+    },
+    (v: string) => toPath(v),
+    "PATH"
   ),
   // different modes
   list: Args.flag({ help: "list all tasks and then exit" }),
@@ -72,7 +82,8 @@ export function printArgs(): void {
   print(`* invoke CONSUME using (${args.consume_command})`);
   print(`* invoke phccs_gash using (${args.phccs_gash_command})`);
   print(`* invoke phccs using (${args.phccs_gash_command})`);
-  print(`* ascend in CS as (${args.cs_class})`);
+  print(`* ascend in path (${args.path})`);
+  print(`* ascend as (${args.class})`);
 }
 
 export function cliExecuteThrow(command: string): void {
@@ -97,11 +108,12 @@ export function willAscend(): boolean {
 
 type ScriptArg = string | { key: string; value: string };
 export function external(
-  name: "garbo" | "keeping_tabs" | "consume" | "phccs" | "phccs_gash",
+  name: "garbo" | "keeping_tabs" | "consume" | "phccs" | "phccs_gash" | "autoscend",
   ...scriptArgs: ScriptArg[]
 ): void {
   const strArgs = scriptArgs.map((a) => (typeof a === "string" ? a : `${a.key}="${a.value}"`));
-  cliExecuteThrow([args[`${name}_command`], ...strArgs].join(" "));
+  const command = name === "autoscend" ? "autoscend" : args[`${name}_command`];
+  cliExecuteThrow([command, ...strArgs].join(" "));
 }
 
 function makeCcs<M extends StrictMacro>(macro: M) {

@@ -16,6 +16,7 @@ import { args, cliExecuteThrow, external, tapped, willAscend, withMacro } from "
 import {
   adv1,
   availableAmount,
+  canInteract,
   getShop,
   guildStoreAvailable,
   handlingChoice,
@@ -50,11 +51,13 @@ export const farm: Quest<Task> = {
   tasks: [
     {
       name: "hagnk",
+      ready: () => canInteract(),
       completed: () => get("lastEmptiedStorage") === myAscensions(),
       do: () => cliExecuteThrow("hagnk all"),
     },
     {
       name: "guild",
+      ready: () => canInteract(),
       completed: () => guildStoreAvailable(),
       prepare: () => visitUrl("guild.php?place=challenge"),
       do: (): void => {
@@ -81,42 +84,44 @@ export const farm: Quest<Task> = {
     },
     {
       name: "raindoh",
+      ready: () => canInteract(),
       completed: () => have($item`empty Rain-Doh can`),
       do: () => use($item`can of Rain-Doh`),
     },
     {
       name: "breakfast",
+      ready: () => canInteract(),
       do: () => cliExecuteThrow("breakfast"),
       completed: () => get("lastBreakfast") !== -1 || get("breakfastCompleted"),
       limit: { tries: 1 },
     },
     {
       name: "duffo",
-      ready: () => ["", "food", "booze"].includes(get("_questPartyFairQuest")),
+      ready: () => canInteract() && ["", "food", "booze"].includes(get("_questPartyFairQuest")),
       completed: () => get("_questPartyFair") !== "unstarted",
       do: () => cliExecuteThrow("duffo go"),
     },
     {
       name: "garbo ascend",
-      ready: () => willAscend(),
+      ready: () => canInteract() && willAscend(),
       completed: () => tapped(true),
       do: () => external("garbo", "ascend"),
     },
     {
       name: "garbo",
-      ready: () => args.adventures === 0 && !willAscend(),
+      ready: () => canInteract() && args.adventures === 0 && !willAscend(),
       completed: () => tapped(false),
       do: () => external("garbo"),
     },
     {
       name: "limited garbo",
-      ready: () => args.adventures > 0 && !willAscend(),
+      ready: () => canInteract() && args.adventures > 0 && !willAscend(),
       completed: () => myAdventures() <= args.adventures,
       do: () => external("garbo", `-${args.adventures}`),
     },
     {
       name: "pajamas",
-      ready: () => !willAscend() && args.adventures === 0,
+      ready: () => canInteract() && !willAscend() && args.adventures === 0,
       prepare: (): void => {
         if (!get("_aug13Cast") || have($effect`Offhand Remarkable`)) {
           useSkill($skill`Aug. 13th: Left/Off Hander's Day!`);
@@ -129,7 +134,7 @@ export const farm: Quest<Task> = {
     },
     {
       name: "keeping-tabs",
-      ready: () => !willAscend(),
+      ready: () => canInteract() && !willAscend(),
       completed: () => get("_keepingTabs", "") !== "",
       do: () => external("keeping_tabs"),
       post: (): void => {
@@ -144,7 +149,7 @@ export const farm: Quest<Task> = {
     },
     {
       name: "raffle",
-      ready: () => !willAscend(),
+      ready: () => canInteract() && !willAscend(),
       completed: () => availableAmount($item`raffle ticket`) >= RAFFLE_TICKET_COUNT,
       do: () =>
         cliExecuteThrow(`raffle ${RAFFLE_TICKET_COUNT - availableAmount($item`raffle ticket`)}`),
