@@ -1,7 +1,6 @@
 import { Quest, Task } from "grimoire-kolmafia";
 import {
   canInteract,
-  getCampground,
   handlingChoice,
   myAdventures,
   myInebriety,
@@ -9,10 +8,9 @@ import {
   pvpAttacksLeft,
   retrieveItem,
   runChoice,
-  use,
 } from "kolmafia";
 import { args, external, tapped } from "./util";
-import { $item, $items, $path, ascend, have, Lifestyle } from "libram";
+import { $item, $items, $path, ascend, have, Lifestyle, prepareAscension } from "libram";
 
 const smolPath = $path`A Shrunken Adventurer am I`;
 
@@ -31,10 +29,9 @@ export const smol: Quest<Task> = {
         if (myAdventures() > 0 || pvpAttacksLeft() > 0) {
           throw `You shouldn't be ascending with ${myAdventures()} adventures and ${pvpAttacksLeft()} fites left!`;
         }
-        const seeds = $item`packet of rock seeds`;
-        if (getCampground()[`${seeds}`] === undefined) {
-          use(seeds);
-        }
+        const garden = "packet of rock seeds";
+        const eudora = "Our Daily Candles™ order form";
+        prepareAscension({ garden, eudora });
       },
       ready: () => tapped(true) && args.ascend,
       completed: () => !canInteract() && myPath() === smolPath,
