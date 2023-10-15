@@ -1,4 +1,4 @@
-import { Args, Engine, getTasks } from "grimoire-kolmafia";
+import { Args, Engine, getTasks, Task } from "grimoire-kolmafia";
 import { args, daily, fmt, printArgs } from "./util";
 import { farm } from "./farm";
 import { cs } from "./cs";
@@ -7,6 +7,24 @@ import { print, totalTurnsPlayed, wait } from "kolmafia";
 import { pvp } from "./pvp";
 import { get } from "libram";
 
+class HalfloopEngine extends Engine {
+  turns: Map<string, number[]> = new Map();
+
+  execute(task: Task<never>): void {
+    const startingTurns = totalTurnsPlayed();
+    super.execute(task);
+    const oldTurns = this.turns.get(task.name);
+    this.turns.set(task.name, [totalTurnsPlayed() - startingTurns, ...(oldTurns ?? [])]);
+  }
+
+  printTurns(): void {
+    print("Tasks Turns:");
+    for (const [name, turns] of this.turns.entries()) {
+      print(`- ${name}: ${turns.reduce((a, b) => a + b)} (${turns})`);
+    }
+  }
+}
+
 export function main(command = ""): void {
   Args.fill(args, command);
 
@@ -14,7 +32,7 @@ export function main(command = ""): void {
   const startingSwagger = get("availableSwagger");
 
   const tasks = getTasks([pvp, cs, diet, farm]);
-  const engine = new Engine(tasks);
+  const engine = new HalfloopEngine(tasks);
 
   if (args.help) {
     Args.showHelp(args);
@@ -48,6 +66,9 @@ export function main(command = ""): void {
     engine.run();
   } finally {
     engine.destruct();
+    engine.printTurns();
+
+    print("");
 
     const endingTurns = totalTurnsPlayed();
     const endingSwagger = get("availableSwagger");
