@@ -1,12 +1,11 @@
 import { Args, Engine, getTasks, Task } from "grimoire-kolmafia";
 import { args, daily, fmt, printArgs } from "./util";
 import { farm } from "./farm";
-import { cs } from "./cs";
 import { diet } from "./diet";
 import { print, totalTurnsPlayed, wait } from "kolmafia";
 import { pvp } from "./pvp";
-import { $path, get } from "libram";
-import { smol } from "./smol";
+import { get } from "libram";
+import { autoscend, pathQuest } from "./paths";
 
 class HalfloopEngine extends Engine {
   turns: Map<string, number[]> = new Map();
@@ -32,9 +31,7 @@ export function main(command = ""): void {
   const startingTurns = totalTurnsPlayed();
   const startingSwagger = get("availableSwagger");
 
-  const path = args.path === $path`Community Service` ? cs : smol;
-
-  const tasks = getTasks([pvp, path, diet, farm]);
+  const tasks = getTasks([pvp, autoscend, pathQuest(), diet, farm]);
   const engine = new HalfloopEngine(tasks);
 
   if (args.help) {

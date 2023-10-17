@@ -3,14 +3,14 @@ import {
   canInteract,
   handlingChoice,
   myAdventures,
-  myInebriety,
   myPath,
   pvpAttacksLeft,
   retrieveItem,
   runChoice,
+  visitUrl,
 } from "kolmafia";
-import { args, external, tapped } from "./util";
-import { $item, $items, $path, ascend, have, Lifestyle, prepareAscension } from "libram";
+import { args, tapped } from "../util";
+import { $item, $items, $path, ascend, have, prepareAscension } from "libram";
 
 const smolPath = $path`A Shrunken Adventurer am I`;
 
@@ -39,19 +39,14 @@ export const smol: Quest<Task> = {
         ascend({
           path: smolPath,
           playerClass: args.class,
-          lifestyle: Lifestyle.softcore,
+          lifestyle: args.lifestyle,
           moon: "knoll",
           pet: $item`astral belt`,
           consumable: $item`astral six-pack`,
         });
+        visitUrl("main.php");
         while (handlingChoice()) runChoice(1);
       },
-    },
-    {
-      name: "smol",
-      ready: () => myPath() === smolPath && myInebriety() < 2,
-      completed: () => canInteract(),
-      do: () => external("autoscend"),
     },
   ],
 };

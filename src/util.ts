@@ -20,7 +20,12 @@ import {
   visitUrl,
   writeCcs,
 } from "kolmafia";
-import { $class, $familiar, $path, get, set, StrictMacro } from "libram";
+import { $class, $familiar, $path, get, Lifestyle, set, StrictMacro } from "libram";
+
+const pathShortcuts = new Map([
+  ["smol", $path`A Shrunken Adventurer am I`],
+  ["cs", $path`Community Service`],
+]);
 
 export const args = Args.create("halfloop", "Loop your brains out (on live tv)", {
   pvp: Args.boolean({ help: "Run PVP fites", default: true }),
@@ -60,8 +65,16 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
       help: "What path to run as",
       default: $path`Community Service`,
     },
-    (v: string) => toPath(v),
+    (v: string) => pathShortcuts.get(v) ?? toPath(v),
     "PATH"
+  ),
+  lifestyle: Args.custom<Lifestyle>(
+    {
+      help: "Ascend as Hardcore or Softcore",
+      default: Lifestyle.softcore,
+    },
+    (v) => (v === "hardcore" ? Lifestyle.hardcore : Lifestyle.softcore),
+    "LIFESTYLE"
   ),
   // different modes
   list: Args.flag({ help: "list all tasks and then exit" }),

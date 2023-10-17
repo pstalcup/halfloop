@@ -1,6 +1,6 @@
 import { Quest, Task } from "grimoire-kolmafia";
 import { get } from "libram";
-import { args, external, tapped } from "./util";
+import { args, external, tapped } from "../util";
 import { myAdventures, pvpAttacksLeft } from "kolmafia";
 
 export const cs: Quest<Task> = {
