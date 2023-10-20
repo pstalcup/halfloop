@@ -15,15 +15,60 @@ import {
   $item,
   get,
   getRemainingLiver,
+  getRemainingSpleen,
   getRemainingStomach,
   have,
   withProperty,
 } from "libram";
-import { args, cliExecuteThrow, external, willAscend } from "./util";
+import { args, cliExecuteThrow, external, halloween, willAscend } from "./util";
 
 const shouldNightcap = () => getRemainingLiver() === 0 && myFamiliar() === $familiar`Stooper`;
 
 const OVERDRUNK_VOA = 4000;
+const HALLOWEEN_MPA = 15000;
+
+function primaryDietTasks() {
+  if (halloween()) {
+    return [
+      {
+        name: "halloween consume",
+        ready: () => shouldNightcap() && willAscend(),
+        completed: () =>
+          getRemainingStomach() === 0 && getRemainingLiver() === 0 && getRemainingSpleen() === 0,
+        do: () => withProperty("valueOfAdventure", HALLOWEEN_MPA, () => external("consume", "ALL")),
+      },
+      {
+        name: "halloween nightcap ascend",
+        ready: () => shouldNightcap() && willAscend(),
+        completed: () => myInebriety() > inebrietyLimit(),
+        do: () =>
+          withProperty("valueOfAdventure", HALLOWEEN_MPA, () => external("consume", "NIGHTCAP")),
+      },
+      {
+        name: "halloween nightcap",
+        ready: () => shouldNightcap() && !willAscend(),
+        completed: () => myInebriety() > inebrietyLimit(),
+        do: () => external("consume", "NIGHTCAP"),
+      },
+    ];
+  } else {
+    return [
+      {
+        name: "nightcap ascend",
+        ready: () => shouldNightcap() && willAscend(),
+        completed: () => myInebriety() > inebrietyLimit(),
+        do: () =>
+          withProperty("valueOfAdventure", OVERDRUNK_VOA, () => external("consume", "NIGHTCAP")),
+      },
+      {
+        name: "nightcap",
+        ready: () => shouldNightcap() && !willAscend(),
+        completed: () => myInebriety() > inebrietyLimit(),
+        do: () => external("consume", "NIGHTCAP"),
+      },
+    ];
+  }
+}
 
 export const diet: Quest<Task> = {
   name: "diet",
@@ -72,18 +117,6 @@ export const diet: Quest<Task> = {
       do: () => cliExecuteThrow("drink stillsuit distillate"),
       outfit: { familiar: $familiar`Stooper` },
     },
-    {
-      name: "nightcap ascend",
-      ready: () => shouldNightcap() && willAscend(),
-      completed: () => myInebriety() > inebrietyLimit(),
-      do: () =>
-        withProperty("valueOfAdventure", OVERDRUNK_VOA, () => external("consume", "NIGHTCAP")),
-    },
-    {
-      name: "nightcap",
-      ready: () => shouldNightcap() && !willAscend(),
-      completed: () => myInebriety() > inebrietyLimit(),
-      do: () => external("consume", "NIGHTCAP"),
-    },
+    ...primaryDietTasks(),
   ],
 };

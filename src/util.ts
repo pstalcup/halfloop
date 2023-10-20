@@ -4,6 +4,7 @@ import {
   Class,
   cliExecute,
   getAutoAttack,
+  holiday,
   inebrietyLimit,
   inMultiFight,
   myAdventures,
@@ -82,7 +83,12 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
   sleep: Args.flag({ help: "sleep before executing main loop" }),
 });
 
+const _HALLOWEEN = true;
+
 export function printArgs(): void {
+  if (_HALLOWEEN) {
+    print("DEBUG TEST: HALLOWEEN");
+  }
   print(`* Ascend: (${args.ascend})`);
   print(`* Run PVP fites: (${args.pvp})`);
   print(
@@ -119,13 +125,22 @@ export function willAscend(): boolean {
   return args.ascend && get("ascensionsToday") === 0;
 }
 
+const devExternalScripts = ["garbo", "keeping_tabs", "consume", "phccs", "phccs_gash"] as const;
+type DevExternalScript = typeof devExternalScripts[number];
+const externalScripts = ["autoscend", "freecandy"] as const;
+type ExternalScript = typeof externalScripts[number];
+
+function isExternalScript(value: string): value is ExternalScript {
+  return externalScripts.includes(value as ExternalScript);
+}
+
 type ScriptArg = string | { key: string; value: string };
 export function external(
-  name: "garbo" | "keeping_tabs" | "consume" | "phccs" | "phccs_gash" | "autoscend",
+  name: DevExternalScript | ExternalScript,
   ...scriptArgs: ScriptArg[]
 ): void {
   const strArgs = scriptArgs.map((a) => (typeof a === "string" ? a : `${a.key}="${a.value}"`));
-  const command = name === "autoscend" ? "autoscend" : args[`${name}_command`];
+  const command = isExternalScript(name) ? name : args[`${name}_command`];
   cliExecuteThrow([command, ...strArgs].join(" "));
 }
 
@@ -187,4 +202,8 @@ export function daily<T>(
 
 export function fmt(value: number | string): string {
   return `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+export function halloween(): boolean {
+  return _HALLOWEEN || holiday().includes("Halloween");
 }

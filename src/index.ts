@@ -1,5 +1,5 @@
 import { Args, Engine, getTasks, Task } from "grimoire-kolmafia";
-import { args, daily, fmt, printArgs } from "./util";
+import { args, daily, fmt, halloween, printArgs } from "./util";
 import { farm } from "./farm";
 import { diet } from "./diet";
 import { print, totalTurnsPlayed, wait } from "kolmafia";
@@ -37,6 +37,10 @@ export function main(command = ""): void {
   if (args.help) {
     Args.showHelp(args);
     return;
+  }
+
+  if (halloween()) {
+    print("Trick or Treat!");
   }
 
   print("Welcome to Halfloop");

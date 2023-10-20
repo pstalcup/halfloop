@@ -9,10 +9,12 @@ import {
   $skill,
   byClass,
   get,
+  getRemainingLiver,
   have,
+  set,
   StrictMacro,
 } from "libram";
-import { args, cliExecuteThrow, external, tapped, willAscend, withMacro } from "./util";
+import { args, cliExecuteThrow, external, halloween, tapped, willAscend, withMacro } from "./util";
 import {
   adv1,
   availableAmount,
@@ -26,6 +28,7 @@ import {
   myAscensions,
   myClass,
   numericModifier,
+  print,
   repriceShop,
   runChoice,
   shopPrice,
@@ -45,6 +48,64 @@ const RUNAWAY_MACRO = StrictMacro.if_(
   .runaway();
 
 const RAFFLE_TICKET_COUNT = 11;
+const HALLOWEEN_FAMILIAR = $familiar`Red-Nosed Snapper`;
+const HALLOWEEN_OUTFIT = "Ceramic Suit";
+
+function primaryFarmTasks() {
+  print(`halloween ${halloween()}`);
+  if (halloween()) {
+    return [
+      {
+        name: "halloween",
+        outfit: () => ({ familiar: HALLOWEEN_FAMILIAR }),
+        prepare: () => {
+          set("freecandy_treatOutfit", HALLOWEEN_OUTFIT);
+          set("freecandy_familiar", HALLOWEEN_FAMILIAR);
+        },
+        completed: () => tapped(get("ascensionsToday") === 0),
+        do: () => external("freecandy"),
+      },
+      {
+        name: "halloween garbo ascend",
+        ready: () => canInteract() && willAscend() && getRemainingLiver() < 0 && myAdventures() < 5,
+        completed: () => tapped(true),
+        do: () => external("garbo", "ascend"),
+      },
+      {
+        name: "halloween garbo",
+        ready: () =>
+          canInteract() &&
+          args.adventures === 0 &&
+          !willAscend() &&
+          getRemainingLiver() < 0 &&
+          myAdventures() < 5,
+        completed: () => tapped(false),
+        do: () => external("garbo"),
+      },
+    ];
+  } else {
+    return [
+      {
+        name: "garbo ascend",
+        ready: () => canInteract() && willAscend(),
+        completed: () => tapped(true),
+        do: () => external("garbo", "ascend"),
+      },
+      {
+        name: "garbo",
+        ready: () => canInteract() && args.adventures === 0 && !willAscend(),
+        completed: () => tapped(false),
+        do: () => external("garbo"),
+      },
+      {
+        name: "limited garbo",
+        ready: () => canInteract() && args.adventures > 0 && !willAscend(),
+        completed: () => myAdventures() <= args.adventures,
+        do: () => external("garbo", `-${args.adventures}`),
+      },
+    ];
+  }
+}
 
 export const farm: Quest<Task> = {
   name: "farm",
@@ -101,24 +162,7 @@ export const farm: Quest<Task> = {
       completed: () => get("_questPartyFair") !== "unstarted",
       do: () => cliExecuteThrow("duffo go"),
     },
-    {
-      name: "garbo ascend",
-      ready: () => canInteract() && willAscend(),
-      completed: () => tapped(true),
-      do: () => external("garbo", "ascend"),
-    },
-    {
-      name: "garbo",
-      ready: () => canInteract() && args.adventures === 0 && !willAscend(),
-      completed: () => tapped(false),
-      do: () => external("garbo"),
-    },
-    {
-      name: "limited garbo",
-      ready: () => canInteract() && args.adventures > 0 && !willAscend(),
-      completed: () => myAdventures() <= args.adventures,
-      do: () => external("garbo", `-${args.adventures}`),
-    },
+    ...primaryFarmTasks(),
     {
       name: "pajamas",
       ready: () => canInteract() && !willAscend() && args.adventures === 0,
