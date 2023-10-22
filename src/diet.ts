@@ -32,7 +32,6 @@ function primaryDietTasks() {
     return [
       {
         name: "halloween consume",
-        ready: () => shouldNightcap() && willAscend(),
         completed: () =>
           getRemainingStomach() === 0 && getRemainingLiver() === 0 && getRemainingSpleen() === 0,
         do: () => withProperty("valueOfAdventure", HALLOWEEN_MPA, () => external("consume", "ALL")),

@@ -56,6 +56,18 @@ function primaryFarmTasks() {
   if (halloween()) {
     return [
       {
+        name: "garbo nobarf ascend",
+        ready: () => canInteract() && willAscend(),
+        completed: () => get("_garboCompleted").includes("nobarf"),
+        do: () => external("garbo", "nobarf", "ascend"),
+      },
+      {
+        name: "garbo nobarf",
+        ready: () => canInteract(),
+        completed: () => get("_garboCompleted").includes("nobarf"),
+        do: () => external("garbo", "nobarf"),
+      },
+      {
         name: "halloween",
         outfit: () => ({ familiar: HALLOWEEN_FAMILIAR }),
         prepare: () => {
@@ -74,11 +86,7 @@ function primaryFarmTasks() {
       {
         name: "halloween garbo",
         ready: () =>
-          canInteract() &&
-          args.adventures === 0 &&
-          !willAscend() &&
-          getRemainingLiver() < 0 &&
-          myAdventures() < 5,
+          canInteract() && !willAscend() && getRemainingLiver() < 0 && myAdventures() < 5,
         completed: () => tapped(false),
         do: () => external("garbo"),
       },
