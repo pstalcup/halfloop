@@ -115,6 +115,7 @@ export const farm: Quest<Task> = {
       ready: () => canInteract(),
       completed: () => get("lastEmptiedStorage") === myAscensions(),
       do: () => cliExecuteThrow("hagnk all"),
+      post: () => cliExecuteThrow("breakfast"),
     },
     {
       name: "guild",
@@ -148,13 +149,6 @@ export const farm: Quest<Task> = {
       ready: () => canInteract(),
       completed: () => have($item`empty Rain-Doh can`),
       do: () => use($item`can of Rain-Doh`),
-    },
-    {
-      name: "breakfast",
-      ready: () => canInteract(),
-      do: () => cliExecuteThrow("breakfast"),
-      completed: () => get("lastBreakfast") !== -1 || get("breakfastCompleted"),
-      limit: { tries: 1 },
     },
     {
       name: "duffo",
