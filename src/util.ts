@@ -83,7 +83,7 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
   sleep: Args.flag({ help: "sleep before executing main loop" }),
 });
 
-const _HALLOWEEN = true;
+const _HALLOWEEN = false;
 
 export function printArgs(): void {
   if (_HALLOWEEN) {
