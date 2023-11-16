@@ -5,12 +5,13 @@
   "main": "KoLmafia/scripts/kol-js-starter/main-script-name.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "NODE_OPTIONS=--openssl-legacy-provider yarn run build:types && yarn run build:js",
+    "build": "NODE_OPTIONS=--openssl-legacy-provider yarn run build:types && NODE_OPTIONS=--openssl-legacy-provider yarn run build:js",
     "build:types": "tsc",
     "build:js": "webpack",
     "lint": "eslint src && prettier --check .",
     "lint:fix": "eslint src --fix && prettier --check .",
-    "watch": "webpack --watch --progress"
+    "watch": "webpack --watch --progress",
+    "mafia": "cp KoLmafia/scripts/halfloop/halfloop.js ~/Library/Application\\ Support/KoLmafia/scripts/"
   },
   "devDependencies": {
     "@babel/cli": "^7.14.8",

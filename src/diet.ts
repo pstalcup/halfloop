@@ -31,9 +31,17 @@ function primaryDietTasks() {
   if (halloween()) {
     return [
       {
+        name: "stooper",
+        ready: () =>
+          myAdventures() < 5 && getRemainingLiver() === 0 && myFamiliar() !== $familiar`Stooper`,
+        completed: () => getRemainingLiver() === 0 && myFamiliar() === $familiar`Stooper`,
+        do: () => cliExecuteThrow("drink stillsuit distillate"),
+        outfit: { familiar: $familiar`Stooper` },
+      },
+      {
         name: "halloween consume",
         completed: () =>
-          getRemainingStomach() === 0 && getRemainingLiver() === 0 && getRemainingSpleen() === 0,
+          getRemainingStomach() === 0 && getRemainingLiver() <= 0 && getRemainingSpleen() === 0,
         do: () => withProperty("valueOfAdventure", HALLOWEEN_MPA, () => external("consume", "ALL")),
       },
       {
@@ -52,6 +60,14 @@ function primaryDietTasks() {
     ];
   } else {
     return [
+      {
+        name: "stooper",
+        ready: () =>
+          myAdventures() === 0 && getRemainingLiver() === 0 && myFamiliar() !== $familiar`Stooper`,
+        completed: () => getRemainingLiver() === 0 && myFamiliar() === $familiar`Stooper`,
+        do: () => cliExecuteThrow("drink stillsuit distillate"),
+        outfit: { familiar: $familiar`Stooper` },
+      },
       {
         name: "nightcap ascend",
         ready: () => shouldNightcap() && willAscend(),
@@ -107,14 +123,6 @@ export const diet: Quest<Task> = {
         getRemainingLiver() >= 3,
       completed: () => get("_madLiquorDrunk"),
       do: () => drink($item`The Mad Liquor`),
-    },
-    {
-      name: "stooper",
-      ready: () =>
-        myAdventures() === 0 && getRemainingLiver() === 0 && myFamiliar() !== $familiar`Stooper`,
-      completed: () => getRemainingLiver() === 0 && myFamiliar() === $familiar`Stooper`,
-      do: () => cliExecuteThrow("drink stillsuit distillate"),
-      outfit: { familiar: $familiar`Stooper` },
     },
     ...primaryDietTasks(),
   ],

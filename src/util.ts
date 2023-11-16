@@ -127,7 +127,7 @@ export function willAscend(): boolean {
 
 const devExternalScripts = ["garbo", "keeping_tabs", "consume", "phccs", "phccs_gash"] as const;
 type DevExternalScript = typeof devExternalScripts[number];
-const externalScripts = ["autoscend", "freecandy"] as const;
+const externalScripts = ["autoscend", "freecandy", "combo", "loopsmol"] as const;
 type ExternalScript = typeof externalScripts[number];
 
 function isExternalScript(value: string): value is ExternalScript {

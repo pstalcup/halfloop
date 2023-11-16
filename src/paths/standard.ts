@@ -9,7 +9,7 @@ export const standard: Quest<Task> = {
   name: "standard",
   tasks: [
     {
-      name: "smol gash",
+      name: "standard gash",
       prepare: (): void => {
         if (myAdventures() > 0 || pvpAttacksLeft() > 0) {
           throw `You shouldn't be ascending with ${myAdventures()} adventures and ${pvpAttacksLeft()} fites left!`;

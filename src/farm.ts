@@ -56,13 +56,13 @@ function primaryFarmTasks() {
   if (halloween()) {
     return [
       {
-        name: "garbo nobarf ascend",
+        name: "halloween garbo nobarf ascend",
         ready: () => canInteract() && willAscend(),
         completed: () => get("_garboCompleted").includes("nobarf"),
         do: () => external("garbo", "nobarf", "ascend"),
       },
       {
-        name: "garbo nobarf",
+        name: "halloween garbo nobarf",
         ready: () => canInteract(),
         completed: () => get("_garboCompleted").includes("nobarf"),
         do: () => external("garbo", "nobarf"),
@@ -74,21 +74,14 @@ function primaryFarmTasks() {
           set("freecandy_treatOutfit", HALLOWEEN_OUTFIT);
           set("freecandy_familiar", HALLOWEEN_FAMILIAR);
         },
-        completed: () => tapped(get("ascensionsToday") === 0),
+        completed: () => myAdventures() < 5,
         do: () => external("freecandy"),
       },
       {
-        name: "halloween garbo ascend",
-        ready: () => canInteract() && willAscend() && getRemainingLiver() < 0 && myAdventures() < 5,
+        name: "halloween combo",
+        ready: () => canInteract() && getRemainingLiver() < 0 && myAdventures() < 5,
         completed: () => tapped(true),
-        do: () => external("garbo", "ascend"),
-      },
-      {
-        name: "halloween garbo",
-        ready: () =>
-          canInteract() && !willAscend() && getRemainingLiver() < 0 && myAdventures() < 5,
-        completed: () => tapped(false),
-        do: () => external("garbo"),
+        do: () => external("combo", `${myAdventures()}`),
       },
     ];
   } else {

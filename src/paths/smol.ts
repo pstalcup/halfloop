@@ -9,7 +9,7 @@ import {
   runChoice,
   visitUrl,
 } from "kolmafia";
-import { args, tapped } from "../util";
+import { args, external, tapped } from "../util";
 import { $item, $items, $path, ascend, have, prepareAscension } from "libram";
 
 const smolPath = $path`A Shrunken Adventurer am I`;
@@ -46,6 +46,13 @@ export const smol: Quest<Task> = {
         });
         visitUrl("main.php");
         while (handlingChoice()) runChoice(1);
+      },
+    },
+    {
+      name: "loopsmol",
+      completed: () => canInteract(),
+      do: (): void => {
+        external("loopsmol");
       },
     },
   ],
