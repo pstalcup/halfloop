@@ -21,10 +21,17 @@ export const pvp: Quest<Task> = {
     },
     {
       name: "swagger",
-      ready: () => args.pvp && hippyStoneBroken() && pvpAttacksLeft() > 0 && myAdventures() === 0,
+      ready: () =>
+        args.pvp &&
+        hippyStoneBroken() &&
+        pvpAttacksLeft() > 0 &&
+        myAdventures() === 0,
       completed: () => pvpAttacksLeft() === 0,
       do: (): void => {
-        if (!get("_fireStartingKitUsed") && have($item`CSA fire-starting kit`)) {
+        if (
+          !get("_fireStartingKitUsed") &&
+          have($item`CSA fire-starting kit`)
+        ) {
           withChoice(595, 1, () => {
             use($item`CSA fire-starting kit`);
           });

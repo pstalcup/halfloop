@@ -14,7 +14,10 @@ class HalfloopEngine extends Engine {
     const startingTurns = totalTurnsPlayed();
     super.execute(task);
     const oldTurns = this.turns.get(task.name);
-    this.turns.set(task.name, [totalTurnsPlayed() - startingTurns, ...(oldTurns ?? [])]);
+    this.turns.set(task.name, [
+      totalTurnsPlayed() - startingTurns,
+      ...(oldTurns ?? []),
+    ]);
   }
 
   printTurns(): void {
@@ -78,8 +81,14 @@ export function main(command = ""): void {
     const endingSwagger = get("availableSwagger");
 
     const [totalTurnsSpent, totalSwagger] = daily(({ get, set }) => {
-      set("halfloop_turnsSpent", get("halfloop_turnsSpent") + (endingTurns - startingTurns));
-      set("halfloop_swagger", get("halfloop_swagger") + (endingSwagger - startingSwagger));
+      set(
+        "halfloop_turnsSpent",
+        get("halfloop_turnsSpent") + (endingTurns - startingTurns)
+      );
+      set(
+        "halfloop_swagger",
+        get("halfloop_swagger") + (endingSwagger - startingSwagger)
+      );
       return [get("halfloop_turnsSpent"), get("halfloop_swagger")];
     });
 
@@ -90,8 +99,16 @@ export function main(command = ""): void {
 
     print("Final Results");
     print(`* Total Turns Spent: ${totalTurnsSpent}`);
-    print(`* Garbo Results: ${fmt(meat)} meat + ${fmt(item)} items = ${fmt(meat + item)}`);
-    print(`* Garbo Actions: ${fmt(embezzlers)} embezzlers and ${fmt(yachtzees)} yachtzees`);
+    print(
+      `* Garbo Results: ${fmt(meat)} meat + ${fmt(item)} items = ${fmt(
+        meat + item
+      )}`
+    );
+    print(
+      `* Garbo Actions: ${fmt(embezzlers)} embezzlers and ${fmt(
+        yachtzees
+      )} yachtzees`
+    );
     print(`* Swagger: ${fmt(totalSwagger)}`);
   }
 }
