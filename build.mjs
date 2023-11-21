@@ -15,7 +15,7 @@ const watchPlugin = {
       console.log(
         `[${date.toTimeString()}] Build ${
           result.errors.length ? "failed" : "succeeded"
-        }.`
+        }.`,
       );
     });
   },

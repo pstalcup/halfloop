@@ -40,7 +40,7 @@ export const smol: Quest<Task> = {
         ready: () => canInteract(),
         completed: () => have(i),
         do: () => retrieveItem(i),
-      })
+      }),
     ),
     {
       name: "smol gash",

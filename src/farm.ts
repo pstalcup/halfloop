@@ -46,14 +46,14 @@ import {
 
 const RUNAWAY_MACRO = StrictMacro.if_(
   $monsters`giant rubber spider, time-spinner prank`,
-  StrictMacro.skill($skill`Saucegeyser`).repeat()
+  StrictMacro.skill($skill`Saucegeyser`).repeat(),
 )
   .externalIf(
     have($effect`Eldritch Attunement`),
     StrictMacro.if_(
       $monster`Eldritch Tentacle`,
-      StrictMacro.skill($skill`Saucegeyser`).repeat()
-    )
+      StrictMacro.skill($skill`Saucegeyser`).repeat(),
+    ),
   )
   .runaway();
 
@@ -201,7 +201,7 @@ export const farm: Quest<Task> = {
         cliExecuteThrow(
           `raffle ${
             RAFFLE_TICKET_COUNT - availableAmount($item`raffle ticket`)
-          }`
+          }`,
         ),
     },
   ],

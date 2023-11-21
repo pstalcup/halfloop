@@ -56,7 +56,7 @@ export function main(command = ""): void {
       const available = engine.available(task);
       print(
         `* ${task.name} ${available ? "available" : "unavailable"}`,
-        available ? "black" : "red"
+        available ? "black" : "red",
       );
     }
     print(`Next task: ${engine.getNextTask()?.name}`);
@@ -83,11 +83,11 @@ export function main(command = ""): void {
     const [totalTurnsSpent, totalSwagger] = daily(({ get, set }) => {
       set(
         "halfloop_turnsSpent",
-        get("halfloop_turnsSpent") + (endingTurns - startingTurns)
+        get("halfloop_turnsSpent") + (endingTurns - startingTurns),
       );
       set(
         "halfloop_swagger",
-        get("halfloop_swagger") + (endingSwagger - startingSwagger)
+        get("halfloop_swagger") + (endingSwagger - startingSwagger),
       );
       return [get("halfloop_turnsSpent"), get("halfloop_swagger")];
     });
@@ -101,13 +101,13 @@ export function main(command = ""): void {
     print(`* Total Turns Spent: ${totalTurnsSpent}`);
     print(
       `* Garbo Results: ${fmt(meat)} meat + ${fmt(item)} items = ${fmt(
-        meat + item
-      )}`
+        meat + item,
+      )}`,
     );
     print(
       `* Garbo Actions: ${fmt(embezzlers)} embezzlers and ${fmt(
-        yachtzees
-      )} yachtzees`
+        yachtzees,
+      )} yachtzees`,
     );
     print(`* Swagger: ${fmt(totalSwagger)}`);
   }

@@ -51,7 +51,7 @@ function primaryDietTasks() {
           getRemainingSpleen() === 0,
         do: () =>
           withProperty("valueOfAdventure", HALLOWEEN_MPA, () =>
-            external("consume", "ALL")
+            external("consume", "ALL"),
           ),
       },
       {
@@ -60,7 +60,7 @@ function primaryDietTasks() {
         completed: () => myInebriety() > inebrietyLimit(),
         do: () =>
           withProperty("valueOfAdventure", HALLOWEEN_MPA, () =>
-            external("consume", "NIGHTCAP")
+            external("consume", "NIGHTCAP"),
           ),
       },
       {
@@ -115,7 +115,7 @@ function primaryDietTasks() {
         completed: () => myInebriety() > inebrietyLimit(),
         do: () =>
           withProperty("valueOfAdventure", OVERDRUNK_VOA, () =>
-            external("consume", "NIGHTCAP")
+            external("consume", "NIGHTCAP"),
           ),
       },
       {
