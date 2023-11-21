@@ -22,67 +22,87 @@ import {
   visitUrl,
   writeCcs,
 } from "kolmafia";
-import { $class, $familiar, $path, get, Lifestyle, set, StrictMacro } from "libram";
+import {
+  $class,
+  $familiar,
+  $path,
+  get,
+  Lifestyle,
+  set,
+  StrictMacro,
+} from "libram";
 
 const pathShortcuts = new Map([
   ["smol", $path`A Shrunken Adventurer am I`],
   ["cs", $path`Community Service`],
 ]);
 
-export const args = Args.create("halfloop", "Loop your brains out (on live tv)", {
-  pvp: Args.boolean({ help: "Run PVP fites", default: true }),
-  ascend: Args.boolean({ help: "Loop today", default: true }),
-  batfellow: Args.boolean({ help: "consider batfellow consumables", default: true }),
-  adventures: Args.number({
-    help: "How many turns to keep on your final leg (will also skip nightcap)",
-    default: 0,
-  }),
-  garbo_command: Args.string({ help: "how to invoke garbo", default: "garbo" }),
-  keeping_tabs_command: Args.string({
-    help: "how to invoke keeping tabs",
-    default: "keeping-tabs-dev",
-  }),
-  consume_command: Args.string({
-    help: "how to invoke CONSUME",
-    default: "CONSUME",
-  }),
-  phccs_gash_command: Args.string({
-    help: "how to invoke phccs_gash",
-    default: "phccs_gash",
-  }),
-  phccs_command: Args.string({
-    help: "how to invoke phccs",
-    default: "phccs",
-  }),
-  class: Args.custom<Class>(
-    {
-      help: "what class to run PHCCS as",
-      default: $class`Pastamancer`,
-    },
-    (v: string) => toClass(v),
-    "CLASS"
-  ),
-  path: Args.custom<Path>(
-    {
-      help: "What path to run as",
-      default: $path`Community Service`,
-    },
-    (v: string) => pathShortcuts.get(v) ?? toPath(v),
-    "PATH"
-  ),
-  lifestyle: Args.custom<Lifestyle>(
-    {
-      help: "Ascend as Hardcore or Softcore",
-      default: Lifestyle.softcore,
-    },
-    (v) => (v === "hardcore" ? Lifestyle.hardcore : Lifestyle.softcore),
-    "LIFESTYLE"
-  ),
-  // different modes
-  list: Args.flag({ help: "list all tasks and then exit" }),
-  args: Args.flag({ help: "print out a message showing what args will be used" }),
-  sleep: Args.flag({ help: "sleep before executing main loop" }),
-});
+export const args = Args.create(
+  "halfloop",
+  "Loop your brains out (on live tv)",
+  {
+    pvp: Args.boolean({ help: "Run PVP fites", default: true }),
+    ascend: Args.boolean({ help: "Loop today", default: true }),
+    batfellow: Args.boolean({
+      help: "consider batfellow consumables",
+      default: true,
+    }),
+    adventures: Args.number({
+      help: "How many turns to keep on your final leg (will also skip nightcap)",
+      default: 0,
+    }),
+    garbo_command: Args.string({
+      help: "how to invoke garbo",
+      default: "garbo",
+    }),
+    keeping_tabs_command: Args.string({
+      help: "how to invoke keeping tabs",
+      default: "keeping-tabs-dev",
+    }),
+    consume_command: Args.string({
+      help: "how to invoke CONSUME",
+      default: "CONSUME",
+    }),
+    phccs_gash_command: Args.string({
+      help: "how to invoke phccs_gash",
+      default: "phccs_gash",
+    }),
+    phccs_command: Args.string({
+      help: "how to invoke phccs",
+      default: "phccs",
+    }),
+    class: Args.custom<Class>(
+      {
+        help: "what class to run PHCCS as",
+        default: $class`Pastamancer`,
+      },
+      (v: string) => toClass(v),
+      "CLASS",
+    ),
+    path: Args.custom<Path>(
+      {
+        help: "What path to run as",
+        default: $path`Community Service`,
+      },
+      (v: string) => pathShortcuts.get(v) ?? toPath(v),
+      "PATH",
+    ),
+    lifestyle: Args.custom<Lifestyle>(
+      {
+        help: "Ascend as Hardcore or Softcore",
+        default: Lifestyle.softcore,
+      },
+      (v) => (v === "hardcore" ? Lifestyle.hardcore : Lifestyle.softcore),
+      "LIFESTYLE",
+    ),
+    // different modes
+    list: Args.flag({ help: "list all tasks and then exit" }),
+    args: Args.flag({
+      help: "print out a message showing what args will be used",
+    }),
+    sleep: Args.flag({ help: "sleep before executing main loop" }),
+  },
+);
 
 const _HALLOWEEN = false;
 
@@ -95,7 +115,7 @@ export function printArgs(): void {
   print(
     args.adventures === 0
       ? "* Keep no adventures and nightcap"
-      : `* Keep ${args.adventures} adventures and do not nightcap`
+      : `* Keep ${args.adventures} adventures and do not nightcap`,
   );
   print(`* invoke garbo using (${args.garbo_command})`);
   print(`* invoke keeping-tabs using (${args.keeping_tabs_command})`);
@@ -114,7 +134,8 @@ export function tapped(ascend: boolean): boolean {
   // you are done for today if:
   // * when ascending, you have 0 turns
   // * when not ascending, you are overdrunk
-  const limit = inebrietyLimit() - (myFamiliar() === $familiar`Stooper` ? 1 : 0);
+  const limit =
+    inebrietyLimit() - (myFamiliar() === $familiar`Stooper` ? 1 : 0);
   if (ascend) {
     return myInebriety() > limit && myAdventures() === 0;
   } else {
@@ -126,10 +147,22 @@ export function willAscend(): boolean {
   return args.ascend && get("ascensionsToday") === 0;
 }
 
-const devExternalScripts = ["garbo", "keeping_tabs", "consume", "phccs", "phccs_gash"] as const;
-type DevExternalScript = typeof devExternalScripts[number];
-const externalScripts = ["autoscend", "freecandy", "combo", "loopsmol", "loopcasual"] as const;
-type ExternalScript = typeof externalScripts[number];
+const devExternalScripts = [
+  "garbo",
+  "keeping_tabs",
+  "consume",
+  "phccs",
+  "phccs_gash",
+] as const;
+type DevExternalScript = (typeof devExternalScripts)[number];
+const externalScripts = [
+  "autoscend",
+  "freecandy",
+  "combo",
+  "loopsmol",
+  "loopcasual",
+] as const;
+type ExternalScript = (typeof externalScripts)[number];
 
 function isExternalScript(value: string): value is ExternalScript {
   return externalScripts.includes(value as ExternalScript);
@@ -140,7 +173,9 @@ export function external(
   name: DevExternalScript | ExternalScript,
   ...scriptArgs: ScriptArg[]
 ): void {
-  const strArgs = scriptArgs.map((a) => (typeof a === "string" ? a : `${a.key}="${a.value}"`));
+  const strArgs = scriptArgs.map((a) =>
+    typeof a === "string" ? a : `${a.key}="${a.value}"`,
+  );
   const command = isExternalScript(name) ? name : args[`${name}_command`];
   cliExecuteThrow([command, ...strArgs].join(" "));
 }
@@ -157,7 +192,9 @@ function runCombatBy<T>(initiateCombatAction: () => T) {
     if (choiceFollowsFight()) visitUrl("choice.php");
     return result;
   } catch (e) {
-    throw `Combat exception! Last macro error: ${get("lastMacroError")}. Exception ${e}.`;
+    throw `Combat exception! Last macro error: ${get(
+      "lastMacroError",
+    )}. Exception ${e}.`;
   }
 }
 
@@ -168,7 +205,11 @@ function runCombatBy<T>(initiateCombatAction: () => T) {
  * @param tryAuto Whether or not we should try to resolve the combat with an autoattack; autoattack macros can fail against special monsters, and thus we have to submit a macro via CCS regardless.
  * @returns The output of your specified action function (typically void)
  */
-export function withMacro<T, M extends StrictMacro>(macro: M, action: () => T, tryAuto = false): T {
+export function withMacro<T, M extends StrictMacro>(
+  macro: M,
+  action: () => T,
+  tryAuto = false,
+): T {
   if (getAutoAttack() !== 0) setAutoAttack(0);
   if (tryAuto) macro.setAutoAttack();
   makeCcs(macro);
@@ -179,15 +220,18 @@ export function withMacro<T, M extends StrictMacro>(macro: M, action: () => T, t
   }
 }
 
-const dailyNumericProperties = ["halfloop_turnsSpent", "halfloop_swagger"] as const;
-export type DailyNumericProperty = typeof dailyNumericProperties[number];
+const dailyNumericProperties = [
+  "halfloop_turnsSpent",
+  "halfloop_swagger",
+] as const;
+export type DailyNumericProperty = (typeof dailyNumericProperties)[number];
 export const HALFLOOP_DAILY_FLAG = "halfloop_dailyFlag";
 
 export function daily<T>(
   callback: (functions: {
     get: (property: DailyNumericProperty) => number;
     set: (property: DailyNumericProperty, value: number) => void;
-  }) => T
+  }) => T,
 ): T {
   if (get(HALFLOOP_DAILY_FLAG) !== todayToString()) {
     set(HALFLOOP_DAILY_FLAG, todayToString());
@@ -197,7 +241,8 @@ export function daily<T>(
   }
   return callback({
     get: (property: DailyNumericProperty) => get(property, 0),
-    set: (property: DailyNumericProperty, value: number) => set(property, value),
+    set: (property: DailyNumericProperty, value: number) =>
+      set(property, value),
   });
 }
 

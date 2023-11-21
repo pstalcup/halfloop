@@ -1,7 +1,12 @@
 import { Quest, Task } from "grimoire-kolmafia";
 import { get } from "libram";
 import { args, cliExecuteThrow, external, tapped } from "../util";
-import { canInteract, myAdventures, myAscensions, pvpAttacksLeft } from "kolmafia";
+import {
+  canInteract,
+  myAdventures,
+  myAscensions,
+  pvpAttacksLeft,
+} from "kolmafia";
 
 export const cs: Quest<Task> = {
   name: "cs",
@@ -16,7 +21,10 @@ export const cs: Quest<Task> = {
       ready: () => tapped(true) && args.ascend,
       completed: () => get("ascensionsToday") > 0,
       do: () =>
-        external("phccs_gash", `${args.lifestyle}`, { key: "class", value: `${args.class}` }),
+        external("phccs_gash", `${args.lifestyle}`, {
+          key: "class",
+          value: `${args.class}`,
+        }),
     },
     {
       name: "phccs",
@@ -33,5 +41,6 @@ export const cs: Quest<Task> = {
       post: () => cliExecuteThrow("breakfast"),
     },
   ],
-  completed: () => get("ascensionsToday") === 1 && get("questL13Final") === "finished",
+  completed: () =>
+    get("ascensionsToday") === 1 && get("questL13Final") === "finished",
 };

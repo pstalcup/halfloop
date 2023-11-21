@@ -14,7 +14,15 @@ import {
   set,
   StrictMacro,
 } from "libram";
-import { args, cliExecuteThrow, external, halloween, tapped, willAscend, withMacro } from "./util";
+import {
+  args,
+  cliExecuteThrow,
+  external,
+  halloween,
+  tapped,
+  willAscend,
+  withMacro,
+} from "./util";
 import {
   adv1,
   availableAmount,
@@ -38,11 +46,14 @@ import {
 
 const RUNAWAY_MACRO = StrictMacro.if_(
   $monsters`giant rubber spider, time-spinner prank`,
-  StrictMacro.skill($skill`Saucegeyser`).repeat()
+  StrictMacro.skill($skill`Saucegeyser`).repeat(),
 )
   .externalIf(
     have($effect`Eldritch Attunement`),
-    StrictMacro.if_($monster`Eldritch Tentacle`, StrictMacro.skill($skill`Saucegeyser`).repeat())
+    StrictMacro.if_(
+      $monster`Eldritch Tentacle`,
+      StrictMacro.skill($skill`Saucegeyser`).repeat(),
+    ),
   )
   .runaway();
 
@@ -78,7 +89,8 @@ function primaryFarmTasks() {
       },
       {
         name: "halloween combo",
-        ready: () => canInteract() && getRemainingLiver() < 0 && myAdventures() < 5,
+        ready: () =>
+          canInteract() && getRemainingLiver() < 0 && myAdventures() < 5,
         completed: () => tapped(true),
         do: () => external("combo", `${myAdventures()}`),
       },
@@ -145,7 +157,9 @@ export const farm: Quest<Task> = {
     },
     {
       name: "duffo",
-      ready: () => canInteract() && ["", "food", "booze"].includes(get("_questPartyFairQuest")),
+      ready: () =>
+        canInteract() &&
+        ["", "food", "booze"].includes(get("_questPartyFairQuest")),
       completed: () => get("_questPartyFair") !== "unstarted",
       do: () => cliExecuteThrow("duffo go"),
     },
@@ -181,9 +195,14 @@ export const farm: Quest<Task> = {
     {
       name: "raffle",
       ready: () => canInteract() && !willAscend(),
-      completed: () => availableAmount($item`raffle ticket`) >= RAFFLE_TICKET_COUNT,
+      completed: () =>
+        availableAmount($item`raffle ticket`) >= RAFFLE_TICKET_COUNT,
       do: () =>
-        cliExecuteThrow(`raffle ${RAFFLE_TICKET_COUNT - availableAmount($item`raffle ticket`)}`),
+        cliExecuteThrow(
+          `raffle ${
+            RAFFLE_TICKET_COUNT - availableAmount($item`raffle ticket`)
+          }`,
+        ),
     },
   ],
 };

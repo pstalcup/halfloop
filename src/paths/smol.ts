@@ -34,12 +34,14 @@ const smolPath = $path`A Shrunken Adventurer am I`;
 export const smol: Quest<Task> = {
   name: "smol",
   tasks: [
-    ...$items`Deep Dish of Legend, Calzone of Legend, Pizza of Legend`.map((i) => ({
-      name: `prep ${i}`,
-      ready: () => canInteract(),
-      completed: () => have(i),
-      do: () => retrieveItem(i),
-    })),
+    ...$items`Deep Dish of Legend, Calzone of Legend, Pizza of Legend`.map(
+      (i) => ({
+        name: `prep ${i}`,
+        ready: () => canInteract(),
+        completed: () => have(i),
+        do: () => retrieveItem(i),
+      }),
+    ),
     {
       name: "smol gash",
       prepare: (): void => {

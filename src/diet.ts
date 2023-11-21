@@ -23,7 +23,8 @@ import {
 } from "libram";
 import { args, cliExecuteThrow, external, halloween, willAscend } from "./util";
 
-const shouldNightcap = () => getRemainingLiver() === 0 && myFamiliar() === $familiar`Stooper`;
+const shouldNightcap = () =>
+  getRemainingLiver() === 0 && myFamiliar() === $familiar`Stooper`;
 
 const OVERDRUNK_VOA = 4000;
 const HALLOWEEN_MPA = 15000;
@@ -34,23 +35,33 @@ function primaryDietTasks() {
       {
         name: "stooper",
         ready: () =>
-          myAdventures() < 5 && getRemainingLiver() === 0 && myFamiliar() !== $familiar`Stooper`,
-        completed: () => getRemainingLiver() === 0 && myFamiliar() === $familiar`Stooper`,
+          myAdventures() < 5 &&
+          getRemainingLiver() === 0 &&
+          myFamiliar() !== $familiar`Stooper`,
+        completed: () =>
+          getRemainingLiver() === 0 && myFamiliar() === $familiar`Stooper`,
         do: () => cliExecuteThrow("drink stillsuit distillate"),
         outfit: { familiar: $familiar`Stooper` },
       },
       {
         name: "halloween consume",
         completed: () =>
-          getRemainingStomach() === 0 && getRemainingLiver() <= 0 && getRemainingSpleen() === 0,
-        do: () => withProperty("valueOfAdventure", HALLOWEEN_MPA, () => external("consume", "ALL")),
+          getRemainingStomach() === 0 &&
+          getRemainingLiver() <= 0 &&
+          getRemainingSpleen() === 0,
+        do: () =>
+          withProperty("valueOfAdventure", HALLOWEEN_MPA, () =>
+            external("consume", "ALL"),
+          ),
       },
       {
         name: "halloween nightcap ascend",
         ready: () => shouldNightcap() && willAscend(),
         completed: () => myInebriety() > inebrietyLimit(),
         do: () =>
-          withProperty("valueOfAdventure", HALLOWEEN_MPA, () => external("consume", "NIGHTCAP")),
+          withProperty("valueOfAdventure", HALLOWEEN_MPA, () =>
+            external("consume", "NIGHTCAP"),
+          ),
       },
       {
         name: "halloween nightcap",
@@ -64,8 +75,11 @@ function primaryDietTasks() {
       {
         name: "stooper",
         ready: () =>
-          myAdventures() === 0 && getRemainingLiver() === 0 && myFamiliar() !== $familiar`Stooper`,
-        completed: () => getRemainingLiver() === 0 && myFamiliar() === $familiar`Stooper`,
+          myAdventures() === 0 &&
+          getRemainingLiver() === 0 &&
+          myFamiliar() !== $familiar`Stooper`,
+        completed: () =>
+          getRemainingLiver() === 0 && myFamiliar() === $familiar`Stooper`,
         do: () => cliExecuteThrow("drink stillsuit distillate"),
         outfit: { familiar: $familiar`Stooper` },
       },
@@ -83,7 +97,10 @@ function primaryDietTasks() {
       },
       {
         name: "drunk day shortener",
-        ready: () => willAscend() && myInebriety() > inebrietyLimit() && myAdventures() >= 5,
+        ready: () =>
+          willAscend() &&
+          myInebriety() > inebrietyLimit() &&
+          myAdventures() >= 5,
         completed: () => !have($item`day shortener`),
         do: () => use($item`day shortener`),
       },
@@ -97,7 +114,9 @@ function primaryDietTasks() {
         ready: () => shouldNightcap() && willAscend(),
         completed: () => myInebriety() > inebrietyLimit(),
         do: () =>
-          withProperty("valueOfAdventure", OVERDRUNK_VOA, () => external("consume", "NIGHTCAP")),
+          withProperty("valueOfAdventure", OVERDRUNK_VOA, () =>
+            external("consume", "NIGHTCAP"),
+          ),
       },
       {
         name: "nightcap",
