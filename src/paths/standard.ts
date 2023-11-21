@@ -1,7 +1,7 @@
 import { Quest, Task } from "grimoire-kolmafia";
-import { canInteract, myAdventures, myPath, pvpAttacksLeft } from "kolmafia";
-import { $item, $path, ascend, prepareAscension } from "libram";
-import { args, tapped } from "../util";
+import { canInteract, myAdventures, myAscensions, myPath, pvpAttacksLeft } from "kolmafia";
+import { $item, $path, ascend, get, prepareAscension } from "libram";
+import { args, cliExecuteThrow, tapped } from "../util";
 
 const standardPath = $path`Standard`;
 
@@ -30,6 +30,14 @@ export const standard: Quest<Task> = {
           consumable: $item`astral six-pack`,
         });
       },
+    },
+
+    {
+      name: "hagnk",
+      ready: () => canInteract(),
+      completed: () => get("lastEmptiedStorage") === myAscensions(),
+      do: () => cliExecuteThrow("hagnk all"),
+      post: () => cliExecuteThrow("breakfast"),
     },
   ],
 };

@@ -25,7 +25,6 @@ import {
   Item,
   mallPrice,
   myAdventures,
-  myAscensions,
   myClass,
   numericModifier,
   print,
@@ -111,13 +110,6 @@ function primaryFarmTasks() {
 export const farm: Quest<Task> = {
   name: "farm",
   tasks: [
-    {
-      name: "hagnk",
-      ready: () => canInteract(),
-      completed: () => get("lastEmptiedStorage") === myAscensions(),
-      do: () => cliExecuteThrow("hagnk all"),
-      post: () => cliExecuteThrow("breakfast"),
-    },
     {
       name: "guild",
       ready: () => canInteract(),

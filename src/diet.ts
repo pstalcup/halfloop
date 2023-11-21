@@ -13,6 +13,7 @@ import {
 import {
   $familiar,
   $item,
+  BurningLeaves,
   get,
   getRemainingLiver,
   getRemainingSpleen,
@@ -67,6 +68,29 @@ function primaryDietTasks() {
         completed: () => getRemainingLiver() === 0 && myFamiliar() === $familiar`Stooper`,
         do: () => cliExecuteThrow("drink stillsuit distillate"),
         outfit: { familiar: $familiar`Stooper` },
+      },
+      {
+        name: "buy day shortener",
+        ready: () => BurningLeaves.numberOfLeaves() > 222,
+        completed: () => get("_leafDayShortenerCrafted"),
+        do: () => cliExecuteThrow("leaves day shortener"),
+      },
+      {
+        name: "buy leaf lasso",
+        ready: () => BurningLeaves.numberOfLeaves() > 69,
+        completed: () => get("_leafLassosCrafted", 0) === 3,
+        do: () => cliExecuteThrow("leaves lit leaf lasso"),
+      },
+      {
+        name: "drunk day shortener",
+        ready: () => willAscend() && myInebriety() > inebrietyLimit() && myAdventures() >= 5,
+        completed: () => !have($item`day shortener`),
+        do: () => use($item`day shortener`),
+      },
+      {
+        name: "extra time",
+        completed: () => get("_extraTimeUsed", 0) > 0,
+        do: () => use($item`extra time`),
       },
       {
         name: "nightcap ascend",

@@ -1,16 +1,33 @@
 import { Quest, Task } from "grimoire-kolmafia";
 import {
+  abort,
   canInteract,
+  drink,
   handlingChoice,
   myAdventures,
+  myAscensions,
   myPath,
   pvpAttacksLeft,
   retrieveItem,
   runChoice,
+  use,
+  useSkill,
   visitUrl,
 } from "kolmafia";
-import { args, external, tapped } from "../util";
-import { $item, $items, $path, ascend, have, prepareAscension } from "libram";
+import { args, cliExecuteThrow, external, tapped } from "../util";
+import {
+  $item,
+  $items,
+  $path,
+  $skill,
+  ascend,
+  get,
+  getRemainingLiver,
+  getRemainingSpleen,
+  have,
+  prepareAscension,
+  questStep,
+} from "libram";
 
 const smolPath = $path`A Shrunken Adventurer am I`;
 
@@ -50,9 +67,66 @@ export const smol: Quest<Task> = {
     },
     {
       name: "loopsmol",
+      ready: () => myPath() === smolPath,
       completed: () => canInteract(),
       do: (): void => {
         external("loopsmol");
+      },
+    },
+    {
+      name: "loopsmol prism break",
+      ready: () => myPath() === smolPath && questStep("questL13Final") === 13,
+      completed: () => canInteract(),
+      do: (): void => {
+        drink($item`astral pilsner`);
+        visitUrl("place.php?whichplace=nstower&action=ns_11_prism");
+      },
+      post: (): void => {
+        if (get("sweat") < 75) {
+          abort("Not enough sweat");
+        }
+      },
+    },
+    {
+      name: "hagnk",
+      ready: () => canInteract(),
+      completed: () => get("lastEmptiedStorage") === myAscensions(),
+      do: (): void => {
+        cliExecuteThrow("hagnk all");
+      },
+      post: () => cliExecuteThrow("breakfast"),
+    },
+    {
+      name: "smol sober up (sweat it out)",
+      ready: () => canInteract() && get("_sweatOutSomeBoozeUsed") < 3,
+      completed: () => tapped(false) || getRemainingLiver() >= 0,
+      do: (): void => {
+        useSkill($skill`Sweat Out Some Booze`);
+      },
+    },
+    {
+      name: "smol sober up (sobrie tea)",
+      ready: () => canInteract() && !get("_pottedTeaTreeUsed"),
+      completed: () => tapped(false) || getRemainingLiver() >= 0,
+      do: (): void => {
+        cliExecuteThrow("teatree sobrie tea");
+        use($item`cuppa Sobrie tea`);
+      },
+    },
+    {
+      name: "smol sober up (dog hair)",
+      ready: () => canInteract() && !get("_syntheticDogHairPillUsed"),
+      completed: () => tapped(false) || getRemainingLiver() >= 0,
+      do: (): void => {
+        use($item`synthetic dog hair pill`);
+      },
+    },
+    {
+      name: "liver of steel",
+      ready: () => questStep("questL06Friar") === 999,
+      completed: () => have($skill`Liver of Steel`),
+      do: (): void => {
+        external("loopcasual", { key: "goal", value: "organ" });
       },
     },
   ],

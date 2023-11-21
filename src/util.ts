@@ -10,6 +10,7 @@ import {
   myAdventures,
   myFamiliar,
   myInebriety,
+  mySpleenUse,
   Path,
   print,
   runCombat,
@@ -47,7 +48,7 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
   }),
   phccs_gash_command: Args.string({
     help: "how to invoke phccs_gash",
-    default: "phccs_gash softcore",
+    default: "phccs_gash",
   }),
   phccs_command: Args.string({
     help: "how to invoke phccs",
@@ -117,7 +118,7 @@ export function tapped(ascend: boolean): boolean {
   if (ascend) {
     return myInebriety() > limit && myAdventures() === 0;
   } else {
-    return myInebriety() > limit;
+    return myInebriety() > limit && mySpleenUse() >= 15;
   }
 }
 
@@ -127,7 +128,7 @@ export function willAscend(): boolean {
 
 const devExternalScripts = ["garbo", "keeping_tabs", "consume", "phccs", "phccs_gash"] as const;
 type DevExternalScript = typeof devExternalScripts[number];
-const externalScripts = ["autoscend", "freecandy", "combo", "loopsmol"] as const;
+const externalScripts = ["autoscend", "freecandy", "combo", "loopsmol", "loopcasual"] as const;
 type ExternalScript = typeof externalScripts[number];
 
 function isExternalScript(value: string): value is ExternalScript {
