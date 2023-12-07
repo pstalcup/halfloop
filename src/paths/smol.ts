@@ -8,7 +8,6 @@ import {
   myAscensions,
   myPath,
   pvpAttacksLeft,
-  retrieveItem,
   runChoice,
   use,
   useSkill,
@@ -17,13 +16,11 @@ import {
 import { args, cliExecuteThrow, external, tapped } from "../util";
 import {
   $item,
-  $items,
   $path,
   $skill,
   ascend,
   get,
   getRemainingLiver,
-  getRemainingSpleen,
   have,
   prepareAscension,
   questStep,
@@ -34,12 +31,6 @@ const smolPath = $path`A Shrunken Adventurer am I`;
 export const smol: Quest<Task> = {
   name: "smol",
   tasks: [
-    ...$items`Deep Dish of Legend, Calzone of Legend, Pizza of Legend`.map((i) => ({
-      name: `prep ${i}`,
-      ready: () => canInteract(),
-      completed: () => have(i),
-      do: () => retrieveItem(i),
-    })),
     {
       name: "smol gash",
       prepare: (): void => {
@@ -68,7 +59,7 @@ export const smol: Quest<Task> = {
     {
       name: "loopsmol",
       ready: () => myPath() === smolPath,
-      completed: () => canInteract(),
+      completed: () => canInteract() || questStep("questL13Final") === 13,
       do: (): void => {
         external("loopsmol");
       },

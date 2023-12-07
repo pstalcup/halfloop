@@ -29,7 +29,18 @@ const pathShortcuts = new Map([
   ["cs", $path`Community Service`],
 ]);
 
+const modes = ["garbo", "halloween", "chrono", "auto"] as const;
+type Mode = typeof modes[number];
+
 export const args = Args.create("halfloop", "Loop your brains out (on live tv)", {
+  mode: Args.custom<Mode>(
+    {
+      help: "What mode to run halfloop in",
+      default: "auto",
+    },
+    (v) => (modes.includes(v as Mode) ? (v as Mode) : undefined),
+    "MODE"
+  ),
   pvp: Args.boolean({ help: "Run PVP fites", default: true }),
   ascend: Args.boolean({ help: "Loop today", default: true }),
   batfellow: Args.boolean({ help: "consider batfellow consumables", default: true }),
@@ -84,12 +95,7 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
   sleep: Args.flag({ help: "sleep before executing main loop" }),
 });
 
-const _HALLOWEEN = false;
-
 export function printArgs(): void {
-  if (_HALLOWEEN) {
-    print("DEBUG TEST: HALLOWEEN");
-  }
   print(`* Ascend: (${args.ascend})`);
   print(`* Run PVP fites: (${args.pvp})`);
   print(
@@ -104,6 +110,7 @@ export function printArgs(): void {
   print(`* invoke phccs using (${args.phccs_gash_command})`);
   print(`* ascend in path (${args.path})`);
   print(`* ascend as (${args.class})`);
+  print(`* farm mode: (${args.mode} => ${mode()})`);
 }
 
 export function cliExecuteThrow(command: string): void {
@@ -128,7 +135,14 @@ export function willAscend(): boolean {
 
 const devExternalScripts = ["garbo", "keeping_tabs", "consume", "phccs", "phccs_gash"] as const;
 type DevExternalScript = typeof devExternalScripts[number];
-const externalScripts = ["autoscend", "freecandy", "combo", "loopsmol", "loopcasual"] as const;
+const externalScripts = [
+  "autoscend",
+  "freecandy",
+  "combo",
+  "loopsmol",
+  "loopcasual",
+  "chrono",
+] as const;
 type ExternalScript = typeof externalScripts[number];
 
 function isExternalScript(value: string): value is ExternalScript {
@@ -205,6 +219,16 @@ export function fmt(value: number | string): string {
   return `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
+export function mode(): Mode {
+  return args.mode === "auto"
+    ? holiday().includes("Halloween")
+      ? "halloween"
+      : get("timeTowerAvailable")
+      ? "chrono"
+      : "garbo"
+    : args.mode;
+}
+
 export function halloween(): boolean {
-  return _HALLOWEEN || holiday().includes("Halloween");
+  return mode() === "halloween";
 }

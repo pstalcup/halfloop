@@ -14,7 +14,16 @@ import {
   set,
   StrictMacro,
 } from "libram";
-import { args, cliExecuteThrow, external, halloween, tapped, willAscend, withMacro } from "./util";
+import {
+  args,
+  cliExecuteThrow,
+  external,
+  halloween,
+  mode,
+  tapped,
+  willAscend,
+  withMacro,
+} from "./util";
 import {
   adv1,
   availableAmount,
@@ -27,7 +36,6 @@ import {
   myAdventures,
   myClass,
   numericModifier,
-  print,
   repriceShop,
   runChoice,
   shopPrice,
@@ -50,64 +58,102 @@ const RAFFLE_TICKET_COUNT = 11;
 const HALLOWEEN_FAMILIAR = $familiar`Red-Nosed Snapper`;
 const HALLOWEEN_OUTFIT = "Ceramic Suit";
 
+function halloweenFarm() {
+  return [
+    {
+      name: "halloween garbo nobarf ascend",
+      ready: () => canInteract() && willAscend(),
+      completed: () => get("_garboCompleted").includes("nobarf"),
+      do: () => external("garbo", "nobarf", "ascend"),
+    },
+    {
+      name: "halloween garbo nobarf",
+      ready: () => canInteract() && !willAscend(),
+      completed: () => get("_garboCompleted").includes("nobarf"),
+      do: () => external("garbo", "nobarf"),
+    },
+    {
+      name: "halloween",
+      outfit: () => ({ familiar: HALLOWEEN_FAMILIAR }),
+      prepare: () => {
+        set("freecandy_treatOutfit", HALLOWEEN_OUTFIT);
+        set("freecandy_familiar", HALLOWEEN_FAMILIAR);
+      },
+      completed: () => myAdventures() < 5,
+      do: () => external("freecandy"),
+    },
+    {
+      name: "halloween combo",
+      ready: () => canInteract() && getRemainingLiver() < 0 && myAdventures() < 5,
+      completed: () => tapped(true),
+      do: () => external("combo", `${myAdventures()}`),
+    },
+  ];
+}
+
+function chronoFarm() {
+  return [
+    {
+      name: "chrono garbo nobarf ascend",
+      ready: () => canInteract() && willAscend(),
+      completed: () => get("_garboCompleted").includes("nobarf"),
+      do: () => external("garbo", "nobarf", "ascend"),
+    },
+    {
+      name: "chrono garbo nobarf",
+      ready: () => canInteract() && !willAscend(),
+      completed: () => get("_garboCompleted").includes("nobarf"),
+      do: () => external("garbo", "nobarf"),
+    },
+    {
+      name: "chrono",
+      ready: () => canInteract(),
+      completed: () => tapped(willAscend()),
+      do: () => external("chrono"),
+    },
+    {
+      name: "limited chrono",
+      ready: () => canInteract() && args.adventures > 0 && !willAscend(),
+      completed: () => myAdventures() <= args.adventures,
+      do: () => external("chrono", `-${args.adventures}`),
+    },
+  ];
+}
+
+function garboFarm() {
+  return [
+    {
+      name: "garbo ascend",
+      ready: () => canInteract() && willAscend(),
+      completed: () => tapped(true),
+      do: () => external("garbo", "ascend"),
+    },
+    {
+      name: "garbo",
+      ready: () => canInteract() && args.adventures === 0 && !willAscend(),
+      completed: () => tapped(false),
+      do: () => external("garbo"),
+    },
+    {
+      name: "limited garbo",
+      ready: () => canInteract() && args.adventures > 0 && !willAscend(),
+      completed: () => myAdventures() <= args.adventures,
+      do: () => external("garbo", `-${args.adventures}`),
+    },
+  ];
+}
+
 function primaryFarmTasks() {
-  print(`halloween ${halloween()}`);
   if (halloween()) {
-    return [
-      {
-        name: "halloween garbo nobarf ascend",
-        ready: () => canInteract() && willAscend(),
-        completed: () => get("_garboCompleted").includes("nobarf"),
-        do: () => external("garbo", "nobarf", "ascend"),
-      },
-      {
-        name: "halloween garbo nobarf",
-        ready: () => canInteract(),
-        completed: () => get("_garboCompleted").includes("nobarf"),
-        do: () => external("garbo", "nobarf"),
-      },
-      {
-        name: "halloween",
-        outfit: () => ({ familiar: HALLOWEEN_FAMILIAR }),
-        prepare: () => {
-          set("freecandy_treatOutfit", HALLOWEEN_OUTFIT);
-          set("freecandy_familiar", HALLOWEEN_FAMILIAR);
-        },
-        completed: () => myAdventures() < 5,
-        do: () => external("freecandy"),
-      },
-      {
-        name: "halloween combo",
-        ready: () => canInteract() && getRemainingLiver() < 0 && myAdventures() < 5,
-        completed: () => tapped(true),
-        do: () => external("combo", `${myAdventures()}`),
-      },
-    ];
+    return halloweenFarm();
+  } else if (mode() === "chrono") {
+    return chronoFarm();
   } else {
-    return [
-      {
-        name: "garbo ascend",
-        ready: () => canInteract() && willAscend(),
-        completed: () => tapped(true),
-        do: () => external("garbo", "ascend"),
-      },
-      {
-        name: "garbo",
-        ready: () => canInteract() && args.adventures === 0 && !willAscend(),
-        completed: () => tapped(false),
-        do: () => external("garbo"),
-      },
-      {
-        name: "limited garbo",
-        ready: () => canInteract() && args.adventures > 0 && !willAscend(),
-        completed: () => myAdventures() <= args.adventures,
-        do: () => external("garbo", `-${args.adventures}`),
-      },
-    ];
+    return garboFarm();
   }
 }
 
-export const farm: Quest<Task> = {
+export const farm: () => Quest<Task> = () => ({
   name: "farm",
   tasks: [
     {
@@ -186,4 +232,4 @@ export const farm: Quest<Task> = {
         cliExecuteThrow(`raffle ${RAFFLE_TICKET_COUNT - availableAmount($item`raffle ticket`)}`),
     },
   ],
-};
+});

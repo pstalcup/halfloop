@@ -31,7 +31,7 @@ export function main(command = ""): void {
   const startingTurns = totalTurnsPlayed();
   const startingSwagger = get("availableSwagger");
 
-  const tasks = getTasks([pvp, autoscend, pathQuest(), diet, farm]);
+  const tasks = getTasks([pvp, autoscend, pathQuest(), diet, farm()]);
   const engine = new HalfloopEngine(tasks);
 
   if (args.help) {
