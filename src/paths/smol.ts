@@ -7,6 +7,7 @@ import {
   myAdventures,
   myAscensions,
   myPath,
+  myTurncount,
   pvpAttacksLeft,
   runChoice,
   use,
@@ -31,6 +32,7 @@ import {
 export const smolPath = $path`A Shrunken Adventurer am I`;
 export let smolMeat = 0;
 export let smolItems = 0;
+export let smolTurns = 0;
 
 export const smol: Quest<Task> = {
   name: "smol",
@@ -84,6 +86,7 @@ export const smol: Quest<Task> = {
       completed: () => canInteract(),
       do: (): void => {
         drink($item`astral pilsner`);
+        smolTurns = myTurncount();
         visitUrl("place.php?whichplace=nstower&action=ns_11_prism");
       },
       post: (): void => {

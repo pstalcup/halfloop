@@ -4,9 +4,9 @@ import { farm } from "./farm";
 import { diet } from "./diet";
 import { myAdventures, numericModifier, print, totalTurnsPlayed, wait } from "kolmafia";
 import { pvp } from "./pvp";
-import { $item, clamp, get, have } from "libram";
+import { $item, clamp, get, have, sumNumbers } from "libram";
 import { autoscend, pathQuest } from "./paths";
-import { smolItems, smolMeat, smolPath } from "./paths/smol";
+import { smolItems, smolMeat, smolPath, smolTurns } from "./paths/smol";
 
 class HalfloopEngine extends Engine {
   turns: Map<string, number[]> = new Map();
@@ -108,19 +108,27 @@ export function main(command = ""): void {
       ];
     });
 
-    const meat = get("garboResultsMeat", 0);
-    const item = get("garboResultsItems", 0);
+    const garboMeat = get("garboResultsMeat", 0);
+    const garboItems = get("garboResultsItems", 0);
     const embezzlers = get("garboEmbezzlerCount", 0);
     const [turns, lostTurns] = rolloverTurns();
 
+    const meat = sumNumbers([garboMeat, totalSmolItems]);
+    const items = sumNumbers([garboItems, totalSmolItems]);
+
+    const results = (meat: number, items: number) =>
+      `${fmt(meat)} meat + ${fmt(items)} items = ${fmt(meat + items)}`;
+
     print("Final Results");
     print(`* Total Turns Spent: ${totalTurnsSpent}`);
-    print(`* Garbo Results: ${fmt(meat)} meat + ${fmt(item)} items = ${fmt(meat + item)}`);
+    print(`* Garbo Results: ${results(garboMeat, garboItems)}`);
     print(`* Garbo Actions: ${fmt(embezzlers)} embezzlers`);
     if (args.path === smolPath) {
-      print(`* Smol Meat: ${fmt(totalSmolMeat)}`);
-      print(`* Smol Items: ${fmt(totalSmolItems)}`);
+      print(`* Smol Results: ${results(totalSmolMeat, totalSmolItems)}`);
+      print(`* Smol Summary: ${fmt(smolTurns)} turns, ${get("_loopsmol_pulls_used")}`);
     }
+
+    print(`* Overall Results: ${results(meat, items)}`);
     print(`* Swagger: ${fmt(totalSwagger)}`);
     print(`* Turns Tomorrow: ${turns} (after potato and hourglass)`);
     print(`* Losing ${lostTurns} to rollover!`, "red");
