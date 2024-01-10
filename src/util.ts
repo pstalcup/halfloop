@@ -4,6 +4,7 @@ import {
   Class,
   cliExecute,
   getAutoAttack,
+  getPermedSkills,
   holiday,
   inebrietyLimit,
   inMultiFight,
@@ -16,13 +17,14 @@ import {
   runCombat,
   setAutoAttack,
   setCcs,
+  Skill,
   toClass,
   todayToString,
   toPath,
   visitUrl,
   writeCcs,
 } from "kolmafia";
-import { $class, $familiar, $path, get, Lifestyle, set, StrictMacro } from "libram";
+import { $class, $familiar, $path, get, have, Lifestyle, set, StrictMacro } from "libram";
 
 const pathShortcuts = new Map([
   ["smol", $path`A Shrunken Adventurer am I`],
@@ -231,4 +233,9 @@ export function mode(): Mode {
 
 export function halloween(): boolean {
   return mode() === "halloween";
+}
+
+export function skillsToPerm(): Skill[] {
+  const permed = getPermedSkills();
+  return Skill.all().filter((s) => have(s) && !permed[s.name] && s.permable);
 }

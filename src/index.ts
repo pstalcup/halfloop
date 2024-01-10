@@ -2,9 +2,9 @@ import { Args, Engine, getTasks, Task } from "grimoire-kolmafia";
 import { args, daily, fmt, halloween, printArgs } from "./util";
 import { farm } from "./farm";
 import { diet } from "./diet";
-import { print, totalTurnsPlayed, wait } from "kolmafia";
+import { myAdventures, numericModifier, print, totalTurnsPlayed, wait } from "kolmafia";
 import { pvp } from "./pvp";
-import { get } from "libram";
+import { $item, clamp, get, have } from "libram";
 import { autoscend, pathQuest } from "./paths";
 
 class HalfloopEngine extends Engine {
@@ -23,6 +23,23 @@ class HalfloopEngine extends Engine {
       print(`- ${name}: ${turns.reduce((a, b) => a + b)} (${turns})`);
     }
   }
+}
+
+function rolloverTurns() {
+  const base =
+    myAdventures() +
+    40 +
+    numericModifier("Adventures") +
+    clamp(2 * get("_resolutionAdv"), 0, 10) +
+    get("_gibbererAdv") +
+    get("_hareAdv");
+
+  return [
+    clamp(base, 0, 200) +
+      (have($item`potato alarm clock`) ? 5 : 0) +
+      (have($item`etched hourglass`) ? 5 : 0),
+    base - clamp(base, 0, 200),
+  ];
 }
 
 export function main(command = ""): void {
@@ -86,12 +103,14 @@ export function main(command = ""): void {
     const meat = get("garboResultsMeat", 0);
     const item = get("garboResultsItems", 0);
     const embezzlers = get("garboEmbezzlerCount", 0);
-    const yachtzees = get("garboYachtzeeCount", 0);
+    const [turns, lostTurns] = rolloverTurns();
 
     print("Final Results");
     print(`* Total Turns Spent: ${totalTurnsSpent}`);
     print(`* Garbo Results: ${fmt(meat)} meat + ${fmt(item)} items = ${fmt(meat + item)}`);
-    print(`* Garbo Actions: ${fmt(embezzlers)} embezzlers and ${fmt(yachtzees)} yachtzees`);
+    print(`* Garbo Actions: ${fmt(embezzlers)} embezzlers`);
     print(`* Swagger: ${fmt(totalSwagger)}`);
+    print(`* Turns Tomorrow: ${turns} (after potato and hourglass)`);
+    print(`* Losing ${lostTurns} to rollover!`, "red");
   }
 }

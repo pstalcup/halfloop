@@ -13,7 +13,7 @@ import {
   useSkill,
   visitUrl,
 } from "kolmafia";
-import { args, cliExecuteThrow, external, tapped } from "../util";
+import { args, cliExecuteThrow, external, skillsToPerm, tapped } from "../util";
 import {
   $item,
   $path,
@@ -22,6 +22,7 @@ import {
   get,
   getRemainingLiver,
   have,
+  Lifestyle,
   prepareAscension,
   questStep,
 } from "libram";
@@ -48,9 +49,13 @@ export const smol: Quest<Task> = {
           path: smolPath,
           playerClass: args.class,
           lifestyle: args.lifestyle,
-          moon: "knoll",
+          moon: "platypus",
           pet: $item`astral belt`,
           consumable: $item`astral six-pack`,
+          permOptions: {
+            permSkills: new Map(skillsToPerm().map((s) => [s, Lifestyle.hardcore])),
+            neverAbort: false,
+          },
         });
         visitUrl("main.php");
         while (handlingChoice()) runChoice(1);

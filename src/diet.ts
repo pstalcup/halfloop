@@ -10,11 +10,13 @@ import {
   myInebriety,
   retrieveItem,
   use,
+  useSkill,
 } from "kolmafia";
 import {
   $familiar,
   $item,
   $items,
+  $skill,
   BurningLeaves,
   get,
   getRemainingLiver,
@@ -116,6 +118,19 @@ export const diet: Quest<Task> = {
       do: () => use($item`day shortener`),
     },
     {
+      name: "milk of mag",
+      completed: () => get("_milkOfMagnesiumUsed"),
+      acquire: () => [{ item: $item`milk of magnesium` }],
+      do: () => use($item`milk of magnesium`),
+    },
+    {
+      name: "borrowed time",
+      ready: () => !willAscend(),
+      completed: () => get("_borrowedTimeUsed"),
+      acquire: () => [{ item: $item`borrowed time` }],
+      do: () => use($item`borrowed time`),
+    },
+    {
       name: "extra time",
       completed: () => get("_extraTimeUsed", 0) > 0,
       do: () => use($item`extra time`),
@@ -170,6 +185,7 @@ export const diet: Quest<Task> = {
         myFullness() >= 2 &&
         getRemainingLiver() >= 4,
       completed: () => get("_docClocksThymeCocktailDrunk"),
+      prepare: () => useSkill($skill`The Ode to Booze`),
       do: () => drink($item`Doc Clock's thyme cocktail`),
     },
     {
@@ -180,6 +196,7 @@ export const diet: Quest<Task> = {
         myFullness() >= 1 &&
         getRemainingLiver() >= 3,
       completed: () => get("_madLiquorDrunk"),
+      prepare: () => useSkill($skill`The Ode to Booze`),
       do: () => drink($item`The Mad Liquor`),
     },
     ...primaryDietTasks(),

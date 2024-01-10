@@ -44,6 +44,9 @@ import {
   visitUrl,
 } from "kolmafia";
 
+// eslint-disable-next-line libram/verify-constants
+const SNOWBALL = $item`precision snowball`;
+
 const RUNAWAY_MACRO = StrictMacro.if_(
   $monsters`giant rubber spider, time-spinner prank`,
   StrictMacro.skill($skill`Saucegeyser`).repeat()
@@ -230,6 +233,11 @@ export const farm: () => Quest<Task> = () => ({
       completed: () => availableAmount($item`raffle ticket`) >= RAFFLE_TICKET_COUNT,
       do: () =>
         cliExecuteThrow(`raffle ${RAFFLE_TICKET_COUNT - availableAmount($item`raffle ticket`)}`),
+    },
+    {
+      name: "precision snowball",
+      completed: () => availableAmount(SNOWBALL) === 0,
+      do: () => use(SNOWBALL),
     },
   ],
 });
