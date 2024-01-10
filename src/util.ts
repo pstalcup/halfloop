@@ -1,3 +1,4 @@
+import { makeValue } from "garbo-lib";
 import { Args } from "grimoire-kolmafia";
 import {
   choiceFollowsFight,
@@ -195,7 +196,12 @@ export function withMacro<T, M extends StrictMacro>(macro: M, action: () => T, t
   }
 }
 
-const dailyNumericProperties = ["halfloop_turnsSpent", "halfloop_swagger"] as const;
+const dailyNumericProperties = [
+  "halfloop_turnsSpent",
+  "halfloop_swagger",
+  "halfloop_smolMeat",
+  "halfloop_smolItems",
+] as const;
 export type DailyNumericProperty = typeof dailyNumericProperties[number];
 export const HALFLOOP_DAILY_FLAG = "halfloop_dailyFlag";
 
@@ -239,3 +245,5 @@ export function skillsToPerm(): Skill[] {
   const permed = getPermedSkills();
   return Skill.all().filter((s) => have(s) && !permed[s.name] && s.permable);
 }
+
+export const { value: halfloopValue } = makeValue();

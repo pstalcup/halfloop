@@ -6,6 +6,7 @@ import { myAdventures, numericModifier, print, totalTurnsPlayed, wait } from "ko
 import { pvp } from "./pvp";
 import { $item, clamp, get, have } from "libram";
 import { autoscend, pathQuest } from "./paths";
+import { smolItems, smolMeat, smolPath } from "./paths/smol";
 
 class HalfloopEngine extends Engine {
   turns: Map<string, number[]> = new Map();
@@ -94,10 +95,17 @@ export function main(command = ""): void {
     const endingTurns = totalTurnsPlayed();
     const endingSwagger = get("availableSwagger");
 
-    const [totalTurnsSpent, totalSwagger] = daily(({ get, set }) => {
+    const [totalTurnsSpent, totalSwagger, totalSmolMeat, totalSmolItems] = daily(({ get, set }) => {
       set("halfloop_turnsSpent", get("halfloop_turnsSpent") + (endingTurns - startingTurns));
       set("halfloop_swagger", get("halfloop_swagger") + (endingSwagger - startingSwagger));
-      return [get("halfloop_turnsSpent"), get("halfloop_swagger")];
+      set("halfloop_smolMeat", get("halfloop_smolMeat") + smolMeat);
+      set("halfloop_smolItems", get("halfloop_smolItems") + smolItems);
+      return [
+        get("halfloop_turnsSpent"),
+        get("halfloop_swagger"),
+        get("halfloop_smolMeat"),
+        get("halfloop_smolItems"),
+      ];
     });
 
     const meat = get("garboResultsMeat", 0);
@@ -109,6 +117,10 @@ export function main(command = ""): void {
     print(`* Total Turns Spent: ${totalTurnsSpent}`);
     print(`* Garbo Results: ${fmt(meat)} meat + ${fmt(item)} items = ${fmt(meat + item)}`);
     print(`* Garbo Actions: ${fmt(embezzlers)} embezzlers`);
+    if (args.path === smolPath) {
+      print(`* Smol Meat: ${fmt(totalSmolMeat)}`);
+      print(`* Smol Items: ${fmt(totalSmolItems)}`);
+    }
     print(`* Swagger: ${fmt(totalSwagger)}`);
     print(`* Turns Tomorrow: ${turns} (after potato and hourglass)`);
     print(`* Losing ${lostTurns} to rollover!`, "red");

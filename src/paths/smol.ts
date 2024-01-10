@@ -13,7 +13,7 @@ import {
   useSkill,
   visitUrl,
 } from "kolmafia";
-import { args, cliExecuteThrow, external, skillsToPerm, tapped } from "../util";
+import { args, cliExecuteThrow, external, halfloopValue, skillsToPerm, tapped } from "../util";
 import {
   $item,
   $path,
@@ -25,9 +25,12 @@ import {
   Lifestyle,
   prepareAscension,
   questStep,
+  Session,
 } from "libram";
 
-const smolPath = $path`A Shrunken Adventurer am I`;
+export const smolPath = $path`A Shrunken Adventurer am I`;
+export let smolMeat = 0;
+export let smolItems = 0;
 
 export const smol: Quest<Task> = {
   name: "smol",
@@ -66,7 +69,13 @@ export const smol: Quest<Task> = {
       ready: () => myPath() === smolPath,
       completed: () => canInteract() || questStep("questL13Final") === 13,
       do: (): void => {
+        const start = Session.current();
         external("loopsmol");
+        const end = Session.current();
+
+        const { meat, items } = Session.diff(end, start).value(halfloopValue);
+        smolMeat = meat;
+        smolItems = items;
       },
     },
     {
