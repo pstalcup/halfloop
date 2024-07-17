@@ -31,6 +31,7 @@ import { smolPath } from "./paths/smol";
 const pathShortcuts = new Map([
   ["smol", $path`A Shrunken Adventurer am I`],
   ["cs", $path`Community Service`],
+  ["robot", $path`You, Robot`],
 ]);
 
 const modes = ["garbo", "halloween", "chrono", "auto"] as const;
