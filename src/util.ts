@@ -74,6 +74,10 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
     help: "how to invoke loopsmol",
     default: "loopsmol",
   }),
+  looprobot_command: Args.string({
+    help: "how to invoke looprobot",
+    default: "looprobot",
+  }),
   class: Args.custom<Class>(
     {
       help: "what class to run PHCCS as",
@@ -154,6 +158,7 @@ const devExternalScripts = [
   "phccs",
   "phccs_gash",
   "loopsmol",
+  "looprobot",
 ] as const;
 type DevExternalScript = typeof devExternalScripts[number];
 const externalScripts = ["autoscend", "freecandy", "combo", "loopcasual", "chrono"] as const;
@@ -212,6 +217,8 @@ const dailyNumericProperties = [
   "halfloop_swagger",
   "halfloop_smolMeat",
   "halfloop_smolItems",
+  "halfloop_robotMeat",
+  "halfloop_robotItems",
 ] as const;
 export type DailyNumericProperty = typeof dailyNumericProperties[number];
 export const HALFLOOP_DAILY_FLAG = "halfloop_dailyFlag";

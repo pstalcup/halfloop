@@ -7,7 +7,8 @@ import { pvp } from "./pvp";
 import { $item, $path, clamp, Clan, get, have, sumNumbers } from "libram";
 import { autoscend, pathQuest } from "./paths";
 import { smolItems, smolMeat, smolPath, smolTurns } from "./paths/smol";
-import { csItems, csMeat } from "./paths/cs";
+import { csItems, csMeat, csTurns } from "./paths/cs";
+import { robotItems, robotMeat, robotPath, robotTurns } from "./paths/robot";
 
 class HalfloopEngine extends Engine {
   turns: Map<string, number[]> = new Map();
@@ -104,26 +105,33 @@ export function main(command = ""): void {
     const endingTurns = totalTurnsPlayed();
     const endingSwagger = get("availableSwagger");
 
-    const [totalTurnsSpent, totalSwagger, totalSmolMeat, totalSmolItems] = daily(({ get, set }) => {
+    const [totalTurnsSpent, totalSwagger, totalMeat, totalItems] = daily(({ get, set }) => {
       set("halfloop_turnsSpent", get("halfloop_turnsSpent") + (endingTurns - startingTurns));
       set("halfloop_swagger", get("halfloop_swagger") + (endingSwagger - startingSwagger));
       set("halfloop_smolMeat", get("halfloop_smolMeat") + smolMeat);
       set("halfloop_smolItems", get("halfloop_smolItems") + smolItems);
+      set("halfloop_robotMeat", get("halfloop_robotMeat") + robotMeat);
+      set("halfloop_robotItems", get("halfloop_robotItems") + robotItems);
       return [
         get("halfloop_turnsSpent"),
         get("halfloop_swagger"),
-        get("halfloop_smolMeat"),
-        get("halfloop_smolItems"),
+        { smol: get("halfloop_smolMeat"), robot: get("halfloop_robotMeat"), cs: csMeat },
+        { smol: get("halfloop_smolItems"), robot: get("halfloop_robotItems"), cs: csItems },
       ];
     });
+    const pathTurns = {
+      smol: smolTurns,
+      robot: robotTurns,
+      cs: csTurns,
+    };
 
     const garboMeat = get("garboResultsMeat", 0);
     const garboItems = get("garboResultsItems", 0);
     const embezzlers = get("garboEmbezzlerCount", 0);
     const [turns, lostTurns] = rolloverTurns();
 
-    const meat = sumNumbers([garboMeat, totalSmolItems, csMeat]);
-    const items = sumNumbers([garboItems, totalSmolItems, csItems]);
+    const meat = sumNumbers([garboMeat, totalMeat["smol"], totalMeat["robot"], csMeat]);
+    const items = sumNumbers([garboItems, totalItems["smol"], totalItems["robot"], csItems]);
 
     const results = (meat: number, items: number) =>
       `${fmt(meat)} meat + ${fmt(items)} items = ${fmt(meat + items)}`;
@@ -137,15 +145,20 @@ export function main(command = ""): void {
     resultMessage("Total Turns", `${totalTurnsSpent}`);
     resultMessage("Garbo Results", `${results(garboMeat, garboItems)}`);
     resultMessage("Garbo Actions", `${fmt(embezzlers)} embezzlers`);
+
+    const pathSummary = (name: "robot" | "smol" | "cs") => {
+      resultMessage(`${name} Results`, `${results(totalMeat[name], totalItems[name])}`);
+      resultMessage(`${name} Summary`, `${fmt(pathTurns[name])} turns`);
+    };
+
     if (args.path === smolPath) {
-      resultMessage("Smol Results", `${results(totalSmolMeat, totalSmolItems)}`);
-      resultMessage(
-        "Smol Summary",
-        `${fmt(smolTurns)} turns, ${get("_loopsmol_pulls_used")} pulls`
-      );
+      pathSummary("smol");
+    }
+    if (args.path === robotPath) {
+      pathSummary("robot");
     }
     if (args.path === $path`Community Service`) {
-      resultMessage("CS Results", `${results(csMeat, csItems)}`);
+      pathSummary("cs");
     }
     resultMessage("Overall Results", `${results(meat, items)}`);
     resultMessage("Swagger", `${fmt(totalSwagger)}`);
