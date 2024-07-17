@@ -8,6 +8,7 @@ import {
   $monsters,
   $skill,
   byClass,
+  Clan,
   get,
   getRemainingLiver,
   have,
@@ -20,6 +21,7 @@ import {
   external,
   halloween,
   mode,
+  statusUpdate,
   tapped,
   willAscend,
   withMacro,
@@ -130,12 +132,14 @@ function garboFarm() {
       ready: () => canInteract() && willAscend(),
       completed: () => tapped(true),
       do: () => external("garbo", "ascend"),
+      post: () => statusUpdate("garboascend", "Finished `garbo ascend`"),
     },
     {
       name: "garbo",
       ready: () => canInteract() && args.adventures === 0 && !willAscend(),
       completed: () => tapped(false),
       do: () => external("garbo"),
+      post: () => statusUpdate("garbo", "Finished `garbo`"),
     },
     {
       name: "limited garbo",
@@ -207,8 +211,9 @@ export const farm: () => Quest<Task> = () => ({
           useSkill($skill`Aug. 13th: Left/Off Hander's Day!`);
         }
       },
-      completed: () => numericModifier("Adventures") > 70,
+      completed: () => numericModifier("Adventures") > 50,
       do: (): void => {
+        Clan.join("Bonus Adventures from Hell");
         cliExecuteThrow("maximize +adv +switch left");
       },
     },

@@ -1,12 +1,13 @@
 import { Args, Engine, getTasks, Task } from "grimoire-kolmafia";
-import { args, daily, fmt, halloween, printArgs } from "./util";
+import { args, currentArgs, daily, fmt, halloween, statusUpdate } from "./util";
 import { farm } from "./farm";
 import { diet } from "./diet";
 import { myAdventures, numericModifier, print, totalTurnsPlayed, wait } from "kolmafia";
 import { pvp } from "./pvp";
-import { $item, clamp, get, have, sumNumbers } from "libram";
+import { $item, $path, clamp, Clan, get, have, sumNumbers } from "libram";
 import { autoscend, pathQuest } from "./paths";
 import { smolItems, smolMeat, smolPath, smolTurns } from "./paths/smol";
+import { csItems, csMeat } from "./paths/cs";
 
 class HalfloopEngine extends Engine {
   turns: Map<string, number[]> = new Map();
@@ -46,6 +47,8 @@ function rolloverTurns() {
 export function main(command = ""): void {
   Args.fill(args, command);
 
+  Clan.join("Bonus Adventures From Hell"); // make sure you start in the right place
+
   const startingTurns = totalTurnsPlayed();
   const startingSwagger = get("availableSwagger");
 
@@ -61,6 +64,7 @@ export function main(command = ""): void {
     print("Trick or Treat!");
   }
 
+  statusUpdate("start", "Starting Halfloop");
   print("Welcome to Halfloop");
   print(" Run Options:");
   print(" ");
@@ -78,7 +82,12 @@ export function main(command = ""): void {
     return;
   }
 
-  printArgs();
+  const runArgs = currentArgs();
+
+  statusUpdate("args1", runArgs.slice(0, 4).join("\n"));
+  statusUpdate("args2", runArgs.slice(4).join("\n"));
+
+  runArgs.forEach((a) => print(a));
 
   if (args.args) return;
 
@@ -113,24 +122,34 @@ export function main(command = ""): void {
     const embezzlers = get("garboEmbezzlerCount", 0);
     const [turns, lostTurns] = rolloverTurns();
 
-    const meat = sumNumbers([garboMeat, totalSmolItems]);
-    const items = sumNumbers([garboItems, totalSmolItems]);
+    const meat = sumNumbers([garboMeat, totalSmolItems, csMeat]);
+    const items = sumNumbers([garboItems, totalSmolItems, csItems]);
 
     const results = (meat: number, items: number) =>
       `${fmt(meat)} meat + ${fmt(items)} items = ${fmt(meat + items)}`;
 
-    print("Final Results");
-    print(`* Total Turns Spent: ${totalTurnsSpent}`);
-    print(`* Garbo Results: ${results(garboMeat, garboItems)}`);
-    print(`* Garbo Actions: ${fmt(embezzlers)} embezzlers`);
-    if (args.path === smolPath) {
-      print(`* Smol Results: ${results(totalSmolMeat, totalSmolItems)}`);
-      print(`* Smol Summary: ${fmt(smolTurns)} turns, ${get("_loopsmol_pulls_used")}`);
-    }
+    const resultMessage = (title: string, message: string, color = "black") => {
+      statusUpdate(`r${title.replace(" ", "").toLowerCase()}`, `${title} ${message}`);
+      print(`* ${title}: ${message}`, color);
+    };
 
-    print(`* Overall Results: ${results(meat, items)}`);
-    print(`* Swagger: ${fmt(totalSwagger)}`);
-    print(`* Turns Tomorrow: ${turns} (after potato and hourglass)`);
-    print(`* Losing ${lostTurns} to rollover!`, "red");
+    print("Final Results");
+    resultMessage("Total Turns", `${totalTurnsSpent}`);
+    resultMessage("Garbo Results", `${results(garboMeat, garboItems)}`);
+    resultMessage("Garbo Actions", `${fmt(embezzlers)} embezzlers`);
+    if (args.path === smolPath) {
+      resultMessage("Smol Results", `${results(totalSmolMeat, totalSmolItems)}`);
+      resultMessage(
+        "Smol Summary",
+        `${fmt(smolTurns)} turns, ${get("_loopsmol_pulls_used")} pulls`
+      );
+    }
+    if (args.path === $path`Community Service`) {
+      resultMessage("CS Results", `${results(csMeat, csItems)}`);
+    }
+    resultMessage("Overall Results", `${results(meat, items)}`);
+    resultMessage("Swagger", `${fmt(totalSwagger)}`);
+    resultMessage("Turns Tomorrow", `${turns} (after potato and hourglass)`);
+    resultMessage("Lost Turns", `${lostTurns} to rollover`);
   }
 }

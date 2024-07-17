@@ -32,7 +32,7 @@ export const pvp: Quest<Task> = {
         while (get("_meteoriteAdesUsed") < 3 && have($item`Meteorite-Ade`)) {
           use($item`Meteorite-Ade`);
         }
-        cliExecute("swagger");
+        cliExecute("PVP_MAB");
       },
     },
   ],

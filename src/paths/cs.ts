@@ -1,7 +1,18 @@
 import { Quest, Task } from "grimoire-kolmafia";
-import { get } from "libram";
-import { args, cliExecuteThrow, external, tapped } from "../util";
-import { canInteract, myAdventures, myAscensions, pvpAttacksLeft } from "kolmafia";
+import { get, Lifestyle, Session } from "libram";
+import { args, cliExecuteThrow, external, halfloopValue, tapped } from "../util";
+import {
+  canInteract,
+  cliExecute,
+  myAdventures,
+  myAscensions,
+  myTurncount,
+  pvpAttacksLeft,
+} from "kolmafia";
+
+export let csMeat = 0;
+export let csItems = 0;
+export let csTurns = 0;
 
 export const cs: Quest<Task> = {
   name: "cs",
@@ -16,13 +27,27 @@ export const cs: Quest<Task> = {
       ready: () => tapped(true) && args.ascend,
       completed: () => get("ascensionsToday") > 0,
       do: () =>
-        external("phccs_gash", `${args.lifestyle}`, { key: "class", value: `${args.class}` }),
+        external(
+          "phccs_gash",
+          `${args.lifestyle === Lifestyle.hardcore ? "hardcore" : "softcore"}`,
+          { key: "class", value: `${args.class}` }
+        ),
     },
     {
       name: "phccs",
       ready: () => get("ascensionsToday") === 1,
       completed: () => get("questL13Final") === "finished",
-      do: () => external("phccs"),
+      do: (): void => {
+        const start = Session.current();
+        external("phccs");
+        const end = Session.current();
+
+        const { meat, items } = Session.diff(end, start).value(halfloopValue);
+        csMeat = meat;
+        csItems = items;
+        csTurns = myTurncount();
+        cliExecute("refresh all");
+      },
     },
 
     {

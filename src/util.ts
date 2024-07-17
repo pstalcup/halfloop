@@ -1,6 +1,7 @@
 import { makeValue } from "garbo-lib";
 import { Args } from "grimoire-kolmafia";
 import {
+  chatPrivate,
   choiceFollowsFight,
   Class,
   cliExecute,
@@ -14,7 +15,6 @@ import {
   myInebriety,
   mySpleenUse,
   Path,
-  print,
   runCombat,
   setAutoAttack,
   setCcs,
@@ -26,6 +26,7 @@ import {
   writeCcs,
 } from "kolmafia";
 import { $class, $familiar, $path, get, have, Lifestyle, set, StrictMacro } from "libram";
+import { smolPath } from "./paths/smol";
 
 const pathShortcuts = new Map([
   ["smol", $path`A Shrunken Adventurer am I`],
@@ -54,7 +55,7 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
   garbo_command: Args.string({ help: "how to invoke garbo", default: "garbo" }),
   keeping_tabs_command: Args.string({
     help: "how to invoke keeping tabs",
-    default: "keeping-tabs-dev",
+    default: "keeping-tabs",
   }),
   consume_command: Args.string({
     help: "how to invoke CONSUME",
@@ -67,6 +68,10 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
   phccs_command: Args.string({
     help: "how to invoke phccs",
     default: "phccs",
+  }),
+  loopsmol_command: Args.string({
+    help: "how to invoke loopsmol",
+    default: "loopsmol",
   }),
   class: Args.custom<Class>(
     {
@@ -98,22 +103,27 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
   sleep: Args.flag({ help: "sleep before executing main loop" }),
 });
 
-export function printArgs(): void {
-  print(`* Ascend: (${args.ascend})`);
-  print(`* Run PVP fites: (${args.pvp})`);
-  print(
+export function currentArgs(): string[] {
+  return [
+    `* Ascend: (${args.ascend})`,
+    `* Run PVP fites: (${args.pvp})`,
     args.adventures === 0
       ? "* Keep no adventures and nightcap"
-      : `* Keep ${args.adventures} adventures and do not nightcap`
-  );
-  print(`* invoke garbo using (${args.garbo_command})`);
-  print(`* invoke keeping-tabs using (${args.keeping_tabs_command})`);
-  print(`* invoke CONSUME using (${args.consume_command})`);
-  print(`* invoke phccs_gash using (${args.phccs_gash_command})`);
-  print(`* invoke phccs using (${args.phccs_gash_command})`);
-  print(`* ascend in path (${args.path})`);
-  print(`* ascend as (${args.class})`);
-  print(`* farm mode: (${args.mode} => ${mode()})`);
+      : `* Keep ${args.adventures} adventures and do not nightcap`,
+    `* invoke garbo using (${args.garbo_command})`,
+    `* invoke keeping-tabs using (${args.keeping_tabs_command})`,
+    `* invoke CONSUME using (${args.consume_command})`,
+    `* ascend in path (${args.path})`,
+    `* ascend as (${args.class})`,
+    `* farm mode: (${args.mode} => ${mode()})`,
+    ...(args.path === $path`Community Service`
+      ? [
+          `* invoke phccs_gash using (${args.phccs_gash_command})`,
+          `* invoke phccs using (${args.phccs_gash_command})`,
+        ]
+      : []),
+    ...(args.path === smolPath ? [`* invoke loopsmol using (${args.loopsmol_command})`] : []),
+  ];
 }
 
 export function cliExecuteThrow(command: string): void {
@@ -136,16 +146,16 @@ export function willAscend(): boolean {
   return args.ascend && get("ascensionsToday") === 0;
 }
 
-const devExternalScripts = ["garbo", "keeping_tabs", "consume", "phccs", "phccs_gash"] as const;
-type DevExternalScript = typeof devExternalScripts[number];
-const externalScripts = [
-  "autoscend",
-  "freecandy",
-  "combo",
+const devExternalScripts = [
+  "garbo",
+  "keeping_tabs",
+  "consume",
+  "phccs",
+  "phccs_gash",
   "loopsmol",
-  "loopcasual",
-  "chrono",
 ] as const;
+type DevExternalScript = typeof devExternalScripts[number];
+const externalScripts = ["autoscend", "freecandy", "combo", "loopcasual", "chrono"] as const;
 type ExternalScript = typeof externalScripts[number];
 
 function isExternalScript(value: string): value is ExternalScript {
@@ -247,3 +257,7 @@ export function skillsToPerm(): Skill[] {
 }
 
 export const { value: halfloopValue } = makeValue();
+
+export function statusUpdate(id: string, message: string): void {
+  chatPrivate("TortureBot", `ID: ${id} Status: ${message.split("\n").join("\\\\n")}`);
+}

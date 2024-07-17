@@ -29,7 +29,7 @@ import { args, cliExecuteThrow, external, halloween, willAscend } from "./util";
 
 const shouldNightcap = () => getRemainingLiver() === 0 && myFamiliar() === $familiar`Stooper`;
 
-const OVERDRUNK_VOA = 4000;
+const OVERDRUNK_VOA = 5500;
 const HALLOWEEN_MPA = 15000;
 
 function primaryDietTasks() {
@@ -46,7 +46,7 @@ function primaryDietTasks() {
       {
         name: "halloween consume",
         completed: () =>
-          getRemainingStomach() === 0 && getRemainingLiver() <= 0 && getRemainingSpleen() === 0,
+          getRemainingStomach() <= 0 && getRemainingLiver() <= 0 && getRemainingSpleen() === 0,
         do: () => withProperty("valueOfAdventure", HALLOWEEN_MPA, () => external("consume", "ALL")),
       },
       {

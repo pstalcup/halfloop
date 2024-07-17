@@ -14,7 +14,16 @@ import {
   useSkill,
   visitUrl,
 } from "kolmafia";
-import { args, cliExecuteThrow, external, halfloopValue, skillsToPerm, tapped } from "../util";
+import {
+  args,
+  cliExecuteThrow,
+  external,
+  halfloopValue,
+  skillsToPerm,
+  statusUpdate,
+  tapped,
+  willAscend,
+} from "../util";
 import {
   $item,
   $path,
@@ -47,9 +56,10 @@ export const smol: Quest<Task> = {
         const eudora = "Our Daily Candles™ order form";
         prepareAscension({ garden, eudora });
       },
-      ready: () => tapped(true) && args.ascend,
+      ready: () => tapped(true) && willAscend(),
       completed: () => !canInteract() && myPath() === smolPath,
       do: (): void => {
+        statusUpdate("loopsmolstart", "Jumping gash into smol");
         ascend({
           path: smolPath,
           playerClass: args.class,
@@ -71,6 +81,8 @@ export const smol: Quest<Task> = {
       ready: () => myPath() === smolPath,
       completed: () => canInteract() || questStep("questL13Final") === 13,
       do: (): void => {
+        statusUpdate("loopsmolstart", "Starting `loopsmol`");
+
         const start = Session.current();
         external("loopsmol");
         const end = Session.current();
@@ -78,6 +90,8 @@ export const smol: Quest<Task> = {
         const { meat, items } = Session.diff(end, start).value(halfloopValue);
         smolMeat = meat;
         smolItems = items;
+
+        statusUpdate("loopsmolend", "Done with `loopsmol`");
       },
     },
     {
@@ -87,6 +101,7 @@ export const smol: Quest<Task> = {
       do: (): void => {
         drink($item`astral pilsner`);
         smolTurns = myTurncount();
+        statusUpdate("loopsmolprism", `Breaking smol prism. That took ${smolTurns} turns`);
         visitUrl("place.php?whichplace=nstower&action=ns_11_prism");
       },
       post: (): void => {
