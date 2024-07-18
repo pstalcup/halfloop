@@ -1,11 +1,13 @@
 import { Quest, Task } from "grimoire-kolmafia";
 import {
   canInteract,
+  cliExecute,
   myAdventures,
   myAscensions,
   myPath,
   myTurncount,
   pvpAttacksLeft,
+  runChoice,
   visitUrl,
 } from "kolmafia";
 import { $item, $path, ascend, get, prepareAscension, questStep, Session } from "libram";
@@ -36,10 +38,12 @@ export const robot: Quest<Task> = {
           path: robotPath,
           playerClass: args.class,
           lifestyle: args.lifestyle,
-          moon: "knoll",
+          moon: "vole",
           pet: $item`astral belt`,
           consumable: $item`astral six-pack`,
         });
+        if (visitUrl("main.php").includes("one made of rusty metal and scrap wiring")) runChoice(1);
+        cliExecute("refresh all");
       },
     },
 
@@ -48,7 +52,7 @@ export const robot: Quest<Task> = {
       ready: () => myPath() === robotPath,
       completed: () => canInteract() || questStep("questL13Final") === 13,
       do: (): void => {
-        statusUpdate("loopsmolstart", "Starting `loopsmol`");
+        statusUpdate("looprobotstart", "Starting `looprobot`");
 
         const start = Session.current();
         external("looprobot");
@@ -58,16 +62,16 @@ export const robot: Quest<Task> = {
         robotMeat = meat;
         robotItems = items;
 
-        statusUpdate("loopsmolend", "Done with `loopsmol`");
+        statusUpdate("looprobotend", "Done with `looprobot`");
       },
     },
     {
-      name: "loopsmol prism break",
+      name: "looprobot prism break",
       ready: () => myPath() === robotPath && questStep("questL13Final") === 13,
       completed: () => canInteract(),
       do: (): void => {
         robotTurns = myTurncount();
-        statusUpdate("loopsmolprism", `Breaking smol prism. That took ${robotTurns} turns`);
+        statusUpdate("looprobotprism", `Breaking roboit prism. That took ${robotTurns} turns`);
         visitUrl("place.php?whichplace=nstower&action=ns_11_prism");
       },
     },
