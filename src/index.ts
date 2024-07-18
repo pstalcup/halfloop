@@ -127,6 +127,7 @@ export function main(command = ""): void {
 
     const garboMeat = get("garboResultsMeat", 0);
     const garboItems = get("garboResultsItems", 0);
+    const garboTurns = get("garboResultsTurns", 0);
     const embezzlers = get("garboEmbezzlerCount", 0);
     const [turns, lostTurns] = rolloverTurns();
 
@@ -144,7 +145,7 @@ export function main(command = ""): void {
     print("Final Results");
     resultMessage("Total Turns", `${totalTurnsSpent}`);
     resultMessage("Garbo Results", `${results(garboMeat, garboItems)}`);
-    resultMessage("Garbo Actions", `${fmt(embezzlers)} embezzlers`);
+    resultMessage("Garbo Actions", `${fmt(garboTurns)} turns, ${fmt(embezzlers)} embezzlers`);
 
     const pathSummary = (name: "robot" | "smol" | "cs") => {
       resultMessage(`${name} Results`, `${results(totalMeat[name], totalItems[name])}`);

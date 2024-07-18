@@ -10,7 +10,17 @@ import {
   runChoice,
   visitUrl,
 } from "kolmafia";
-import { $item, $path, ascend, get, prepareAscension, questStep, Session } from "libram";
+import {
+  $item,
+  $path,
+  $skill,
+  ascend,
+  get,
+  have,
+  prepareAscension,
+  questStep,
+  Session,
+} from "libram";
 import { args, cliExecuteThrow, external, halfloopValue, statusUpdate, tapped } from "../util";
 
 export const robotPath = $path`You, Robot`;
@@ -81,6 +91,14 @@ export const robot: Quest<Task> = {
       completed: () => get("lastEmptiedStorage") === myAscensions(),
       do: () => cliExecuteThrow("hagnk all"),
       post: () => cliExecuteThrow("breakfast"),
+    },
+    {
+      name: "liver of steel",
+      ready: () => questStep("questL06Friar") === 999,
+      completed: () => have($skill`Liver of Steel`),
+      do: (): void => {
+        external("loopcasual", { key: "goal", value: "organ" });
+      },
     },
   ],
 };
