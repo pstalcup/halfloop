@@ -2,11 +2,9 @@ import { Quest, Task } from "grimoire-kolmafia";
 import {
   canInteract,
   cliExecute,
-  myAdventures,
   myAscensions,
   myPath,
   myTurncount,
-  pvpAttacksLeft,
   runChoice,
   visitUrl,
 } from "kolmafia";
@@ -21,7 +19,15 @@ import {
   questStep,
   Session,
 } from "libram";
-import { args, cliExecuteThrow, external, halfloopValue, statusUpdate, tapped } from "../util";
+import {
+  args,
+  ascensionCheck,
+  cliExecuteThrow,
+  external,
+  halfloopValue,
+  statusUpdate,
+  tapped,
+} from "../util";
 
 export const robotPath = $path`You, Robot`;
 export let robotItems = 0;
@@ -34,9 +40,7 @@ export const robot: Quest<Task> = {
     {
       name: "standard gash",
       prepare: (): void => {
-        if (myAdventures() > 0 || pvpAttacksLeft() > 0) {
-          throw `You shouldn't be ascending with ${myAdventures()} adventures and ${pvpAttacksLeft()} fites left!`;
-        }
+        ascensionCheck();
         const garden = "packet of rock seeds";
         const eudora = "Our Daily Candles™ order form";
         prepareAscension({ garden, eudora });

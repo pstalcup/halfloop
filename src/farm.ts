@@ -11,6 +11,7 @@ import {
   Clan,
   get,
   getRemainingLiver,
+  getRemainingStomach,
   have,
   set,
   StrictMacro,
@@ -19,8 +20,10 @@ import {
   args,
   cliExecuteThrow,
   external,
+  ExternalScript,
   halloween,
   mode,
+  ScriptArg,
   statusUpdate,
   tapped,
   willAscend,
@@ -30,6 +33,7 @@ import {
   adv1,
   availableAmount,
   canInteract,
+  eat,
   getShop,
   guildStoreAvailable,
   handlingChoice,
@@ -59,7 +63,7 @@ const RUNAWAY_MACRO = StrictMacro.if_(
   )
   .runaway();
 
-const RAFFLE_TICKET_COUNT = 11;
+const RAFFLE_TICKET_COUNT = 111;
 const HALLOWEEN_FAMILIAR = $familiar`Red-Nosed Snapper`;
 const HALLOWEEN_OUTFIT = "Ceramic Suit";
 
@@ -96,33 +100,42 @@ function halloweenFarm() {
   ];
 }
 
-function chronoFarm() {
+function nobarfTaskList(name: ExternalScript, ...scriptArgs: ScriptArg[]) {
   return [
     {
-      name: "chrono garbo nobarf ascend",
+      name: "sausages",
+      ready: () => have($item`magical sausage casing`) && getRemainingStomach() >= 0,
+      completed: () => get("_sausagesEaten") >= 21,
+      acquire: [{ item: $item`magical sausage` }],
+      do: () => eat($item`magical sausage`),
+    },
+    {
+      name: `${name} garbo nobarf ascend`,
       ready: () => canInteract() && willAscend(),
       completed: () => get("_garboCompleted").includes("nobarf"),
       do: () => external("garbo", "nobarf", "ascend"),
     },
     {
-      name: "chrono garbo nobarf",
+      name: `${name} garbo nobarf`,
       ready: () => canInteract() && !willAscend(),
       completed: () => get("_garboCompleted").includes("nobarf"),
       do: () => external("garbo", "nobarf"),
     },
     {
-      name: "chrono",
+      name: `${name}`,
       ready: () => canInteract(),
       completed: () => tapped(willAscend()),
-      do: () => external("chrono"),
-    },
-    {
-      name: "limited chrono",
-      ready: () => canInteract() && args.adventures > 0 && !willAscend(),
-      completed: () => myAdventures() <= args.adventures,
-      do: () => external("chrono", `-${args.adventures}`),
+      do: () => external(name, ...scriptArgs),
     },
   ];
+}
+
+function chronoFarm(): Task[] {
+  return nobarfTaskList("chrono");
+}
+
+function crimboFarm(): Task[] {
+  return nobarfTaskList("crimbo", { key: "island", value: "Thanksgiving,VeteransDay" });
 }
 
 function garboFarm() {
@@ -155,6 +168,8 @@ function primaryFarmTasks() {
     return halloweenFarm();
   } else if (mode() === "chrono") {
     return chronoFarm();
+  } else if (mode() === "crimbo") {
+    return crimboFarm();
   } else {
     return garboFarm();
   }
@@ -226,7 +241,7 @@ export const farm: () => Quest<Task> = () => ({
         const shop = getShop();
         for (const itemStr of Object.keys(shop)) {
           const item = Item.get(itemStr);
-          if (shopPrice(item) === 999999999) {
+          if (shopPrice(item) === 999999999999) {
             repriceShop(Math.floor(mallPrice(item) * 0.95), item);
           }
         }

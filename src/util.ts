@@ -15,6 +15,7 @@ import {
   myInebriety,
   mySpleenUse,
   Path,
+  pvpAttacksLeft,
   runCombat,
   setAutoAttack,
   setCcs,
@@ -34,7 +35,7 @@ const pathShortcuts = new Map([
   ["robot", $path`You, Robot`],
 ]);
 
-const modes = ["garbo", "halloween", "chrono", "auto"] as const;
+const modes = ["garbo", "halloween", "chrono", "auto", "crimbo"] as const;
 type Mode = typeof modes[number];
 
 export const args = Args.create("halfloop", "Loop your brains out (on live tv)", {
@@ -161,20 +162,27 @@ const devExternalScripts = [
   "looprobot",
 ] as const;
 type DevExternalScript = typeof devExternalScripts[number];
-const externalScripts = ["autoscend", "freecandy", "combo", "loopcasual", "chrono"] as const;
-type ExternalScript = typeof externalScripts[number];
+const externalScripts = [
+  "autoscend",
+  "freecandy",
+  "combo",
+  "loopcasual",
+  "chrono",
+  "moustacherider",
+  "crimbo",
+] as const;
+type BuiltExternalScript = typeof externalScripts[number];
 
-function isExternalScript(value: string): value is ExternalScript {
-  return externalScripts.includes(value as ExternalScript);
+export type ExternalScript = DevExternalScript | BuiltExternalScript;
+
+function isDevExternalScript(value: string): value is BuiltExternalScript {
+  return externalScripts.includes(value as BuiltExternalScript);
 }
 
-type ScriptArg = string | { key: string; value: string };
-export function external(
-  name: DevExternalScript | ExternalScript,
-  ...scriptArgs: ScriptArg[]
-): void {
+export type ScriptArg = string | { key: string; value: string };
+export function external(name: ExternalScript, ...scriptArgs: ScriptArg[]): void {
   const strArgs = scriptArgs.map((a) => (typeof a === "string" ? a : `${a.key}="${a.value}"`));
-  const command = isExternalScript(name) ? name : args[`${name}_command`];
+  const command = isDevExternalScript(name) ? name : args[`${name}_command`];
   cliExecuteThrow([command, ...strArgs].join(" "));
 }
 
@@ -268,4 +276,10 @@ export const { value: halfloopValue } = makeValue();
 
 export function statusUpdate(id: string, message: string): void {
   chatPrivate("TortureBot", `ID: ${id} Status: ${message.split("\n").join("\\\\n")}`);
+}
+
+export function ascensionCheck(): void {
+  if (myAdventures() > 0 || (args.pvp && pvpAttacksLeft() > 0)) {
+    throw `You shouldn't be ascending with ${myAdventures()} adventures and ${pvpAttacksLeft()} fites left!`;
+  }
 }

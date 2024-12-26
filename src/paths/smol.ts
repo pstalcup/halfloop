@@ -4,11 +4,9 @@ import {
   canInteract,
   drink,
   handlingChoice,
-  myAdventures,
   myAscensions,
   myPath,
   myTurncount,
-  pvpAttacksLeft,
   runChoice,
   use,
   useSkill,
@@ -16,6 +14,7 @@ import {
 } from "kolmafia";
 import {
   args,
+  ascensionCheck,
   cliExecuteThrow,
   external,
   halfloopValue,
@@ -49,9 +48,7 @@ export const smol: Quest<Task> = {
     {
       name: "smol gash",
       prepare: (): void => {
-        if (myAdventures() > 0 || pvpAttacksLeft() > 0) {
-          throw `You shouldn't be ascending with ${myAdventures()} adventures and ${pvpAttacksLeft()} fites left!`;
-        }
+        ascensionCheck();
         const garden = "packet of rock seeds";
         const eudora = "Our Daily Candles™ order form";
         prepareAscension({ garden, eudora });
