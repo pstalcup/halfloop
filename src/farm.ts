@@ -135,7 +135,7 @@ function chronoFarm(): Task[] {
 }
 
 function crimboFarm(): Task[] {
-  return nobarfTaskList("crimbo", { key: "island", value: "Thanksgiving,VeteransDay" });
+  return nobarfTaskList("crimbo", { key: "island", value: "stpatricksday,thanksgiving" });
 }
 
 function garboFarm() {
@@ -258,6 +258,17 @@ export const farm: () => Quest<Task> = () => ({
       name: "precision snowball",
       completed: () => availableAmount(SNOWBALL) === 0,
       do: () => use(SNOWBALL),
+    },
+    {
+      name: "Smoke em if you got em",
+      ready: () => get("getawayCampsiteUnlocked"),
+      completed: () => !have($item`stick of firewood`),
+      do: (): void => {
+        while (have($item`stick of firewood`)) {
+          set("choiceAdventure1394", `1&message=garf`);
+          use(1, $item`campfire smoke`);
+        }
+      },
     },
   ],
 });
