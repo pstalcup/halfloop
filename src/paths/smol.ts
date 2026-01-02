@@ -3,6 +3,7 @@ import {
   abort,
   canInteract,
   drink,
+  floristAvailable,
   handlingChoice,
   myAscensions,
   myPath,
@@ -80,8 +81,9 @@ export const smol: Quest<Task> = {
       do: (): void => {
         statusUpdate("loopsmolstart", "Starting `loopsmol`");
 
+        floristAvailable();
         const start = Session.current();
-        external("loopsmol");
+        external("loopstar");
         const end = Session.current();
 
         const { meat, items } = Session.diff(end, start).value(halfloopValue);
@@ -146,7 +148,7 @@ export const smol: Quest<Task> = {
       ready: () => questStep("questL06Friar") === 999,
       completed: () => have($skill`Liver of Steel`),
       do: (): void => {
-        external("loopcasual", { key: "goal", value: "organ" });
+        external("loopstar", { key: "goal", value: "organ" });
       },
     },
   ],

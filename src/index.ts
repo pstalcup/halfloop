@@ -2,13 +2,21 @@ import { Args, Engine, getTasks, Task } from "grimoire-kolmafia";
 import { args, currentArgs, daily, fmt, halloween, statusUpdate } from "./util";
 import { farm } from "./farm";
 import { diet } from "./diet";
-import { myAdventures, numericModifier, print, totalTurnsPlayed, wait } from "kolmafia";
+import {
+  myAdventures,
+  numericModifier,
+  print,
+  pvpAttacksLeft,
+  totalTurnsPlayed,
+  wait,
+} from "kolmafia";
 import { pvp } from "./pvp";
-import { $item, $path, clamp, Clan, get, have, sumNumbers } from "libram";
+import { $item, $path, clamp, Clan, get, have, Lifestyle, sumNumbers } from "libram";
 import { autoscend, pathQuest } from "./paths";
 import { smolItems, smolMeat, smolPath, smolTurns } from "./paths/smol";
 import { csItems, csMeat, csTurns } from "./paths/cs";
 import { robotItems, robotMeat, robotPath, robotTurns } from "./paths/robot";
+import { casualItems, casualMeat, casualTurns } from "./paths/casual";
 
 class HalfloopEngine extends Engine {
   turns: Map<string, number[]> = new Map();
@@ -43,6 +51,10 @@ function rolloverTurns() {
       (have($item`etched hourglass`) ? 5 : 0),
     base - clamp(base, 0, 200),
   ];
+}
+
+function rolloverFites() {
+  return pvpAttacksLeft() + 10 + numericModifier("PvP Fights");
 }
 
 export function main(command = ""): void {
@@ -112,17 +124,30 @@ export function main(command = ""): void {
       set("halfloop_smolItems", get("halfloop_smolItems") + smolItems);
       set("halfloop_robotMeat", get("halfloop_robotMeat") + robotMeat);
       set("halfloop_robotItems", get("halfloop_robotItems") + robotItems);
+      set("halfloop_casualMeat", get("halfloop_casualMeat") + casualMeat);
+      set("halfloop_casualItems", get("halfloop_casualItems") + casualItems);
       return [
         get("halfloop_turnsSpent"),
         get("halfloop_swagger"),
-        { smol: get("halfloop_smolMeat"), robot: get("halfloop_robotMeat"), cs: csMeat },
-        { smol: get("halfloop_smolItems"), robot: get("halfloop_robotItems"), cs: csItems },
+        {
+          smol: get("halfloop_smolMeat"),
+          robot: get("halfloop_robotMeat"),
+          cs: csMeat,
+          casual: get("halfloop_casualMeat"),
+        },
+        {
+          smol: get("halfloop_smolItems"),
+          robot: get("halfloop_robotItems"),
+          cs: csItems,
+          casual: get("halfloop_casualItems"),
+        },
       ];
     });
     const pathTurns = {
       smol: smolTurns,
       robot: robotTurns,
       cs: csTurns,
+      casual: casualTurns,
     };
 
     const garboMeat = get("garboResultsMeat", 0);
@@ -131,8 +156,20 @@ export function main(command = ""): void {
     const embezzlers = get("garboEmbezzlerCount", 0);
     const [turns, lostTurns] = rolloverTurns();
 
-    const meat = sumNumbers([garboMeat, totalMeat["smol"], totalMeat["robot"], csMeat]);
-    const items = sumNumbers([garboItems, totalItems["smol"], totalItems["robot"], csItems]);
+    const meat = sumNumbers([
+      garboMeat,
+      totalMeat["smol"],
+      totalMeat["robot"],
+      totalMeat["casual"],
+      csMeat,
+    ]);
+    const items = sumNumbers([
+      garboItems,
+      totalItems["smol"],
+      totalItems["robot"],
+      totalItems["casual"],
+      csItems,
+    ]);
 
     const results = (meat: number, items: number) =>
       `${fmt(meat)} meat + ${fmt(items)} items = ${fmt(meat + items)}`;
@@ -147,7 +184,7 @@ export function main(command = ""): void {
     resultMessage("Garbo Results", `${results(garboMeat, garboItems)}`);
     resultMessage("Garbo Actions", `${fmt(garboTurns)} turns, ${fmt(embezzlers)} embezzlers`);
 
-    const pathSummary = (name: "robot" | "smol" | "cs") => {
+    const pathSummary = (name: "robot" | "smol" | "cs" | "casual") => {
       resultMessage(`${name} Results`, `${results(totalMeat[name], totalItems[name])}`);
       resultMessage(`${name} Summary`, `${fmt(pathTurns[name])} turns`);
     };
@@ -161,9 +198,13 @@ export function main(command = ""): void {
     if (args.path === $path`Community Service`) {
       pathSummary("cs");
     }
+    if (args.lifestyle === Lifestyle.casual) {
+      pathSummary("casual");
+    }
     resultMessage("Overall Results", `${results(meat, items)}`);
     resultMessage("Swagger", `${fmt(totalSwagger)}`);
     resultMessage("Turns Tomorrow", `${turns} (after potato and hourglass)`);
+    resultMessage("Fights Tomorrow", `${rolloverFites()}`);
     resultMessage("Lost Turns", `${lostTurns} to rollover`);
   }
 }

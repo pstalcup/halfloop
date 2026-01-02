@@ -135,7 +135,7 @@ function chronoFarm(): Task[] {
 }
 
 function crimboFarm(): Task[] {
-  return nobarfTaskList("crimbo", { key: "island", value: "stpatricksday,thanksgiving" });
+  return nobarfTaskList("crimbo");
 }
 
 function garboFarm() {
@@ -228,8 +228,11 @@ export const farm: () => Quest<Task> = () => ({
       },
       completed: () => numericModifier("Adventures") > 50,
       do: (): void => {
-        Clan.join("Bonus Adventures from Hell");
-        cliExecuteThrow("maximize +adv +switch left");
+        const maxTarget = args.maximize === "adventures" ? "+adv" : "+fites";
+        const maxClan =
+          args.maximize === "adventures" ? "Bonus Adventures from Hell" : "Alliance from Heck";
+        Clan.join(maxClan);
+        cliExecuteThrow(`maximize ${maxTarget} +switch left`);
       },
     },
     {

@@ -1,5 +1,5 @@
 import { Quest, Task } from "grimoire-kolmafia";
-import { get, Lifestyle, Session } from "libram";
+import { $item, get, Lifestyle, Session } from "libram";
 import { args, cliExecuteThrow, external, halfloopValue, tapped } from "../util";
 import {
   canInteract,
@@ -7,7 +7,9 @@ import {
   myAdventures,
   myAscensions,
   myTurncount,
+  putCloset,
   pvpAttacksLeft,
+  takeCloset,
 } from "kolmafia";
 
 export let csMeat = 0;
@@ -38,15 +40,19 @@ export const cs: Quest<Task> = {
       ready: () => get("ascensionsToday") === 1,
       completed: () => get("questL13Final") === "finished",
       do: (): void => {
+        putCloset($item`Leprecondo`);
         const start = Session.current();
         external("phccs");
         const end = Session.current();
+        takeCloset($item`Leprecondo`);
 
         const { meat, items } = Session.diff(end, start).value(halfloopValue);
         csMeat = meat;
         csItems = items;
         csTurns = myTurncount();
         cliExecute("refresh all");
+        cliExecuteThrow("hagnk all");
+        cliExecuteThrow("breakfast");
       },
     },
 

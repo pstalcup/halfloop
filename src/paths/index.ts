@@ -6,6 +6,7 @@ import { cs } from "./cs";
 import { smol } from "./smol";
 import { standard } from "./standard";
 import { robot } from "./robot";
+import { casual } from "./casual";
 
 const uniquePaths = $paths`Community Service, A Shrunken Adventurer am I`;
 
@@ -30,6 +31,8 @@ export function pathQuest(): Quest<Task> {
     return standard;
   } else if (args.path === $path`You, Robot`) {
     return robot;
+  } else if (args.path === $path.none) {
+    return casual;
   }
   throw `Unsupported Path ${args.path}`;
 }

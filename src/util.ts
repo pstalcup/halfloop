@@ -33,6 +33,13 @@ const pathShortcuts = new Map([
   ["smol", $path`A Shrunken Adventurer am I`],
   ["cs", $path`Community Service`],
   ["robot", $path`You, Robot`],
+  ["casual", $path.none],
+]);
+
+const lifestyleShortcuts = new Map([
+  ["hardcore", Lifestyle.hardcore],
+  ["softcore", Lifestyle.softcore],
+  ["casual", Lifestyle.casual],
 ]);
 
 const modes = ["garbo", "halloween", "chrono", "auto", "crimbo"] as const;
@@ -71,13 +78,17 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
     help: "how to invoke phccs",
     default: "phccs",
   }),
-  loopsmol_command: Args.string({
-    help: "how to invoke loopsmol",
-    default: "loopsmol",
+  loopstar_command: Args.string({
+    help: "how to invoke loopstar",
+    default: "loopstar",
   }),
   looprobot_command: Args.string({
     help: "how to invoke looprobot",
     default: "looprobot",
+  }),
+  crimbo_command: Args.string({
+    help: "how to invoke crimbo",
+    default: "crimbo",
   }),
   class: Args.custom<Class>(
     {
@@ -100,8 +111,16 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
       help: "Ascend as Hardcore or Softcore",
       default: Lifestyle.softcore,
     },
-    (v) => (v === "hardcore" ? Lifestyle.hardcore : Lifestyle.softcore),
+    (v) => lifestyleShortcuts.get(v) ?? Lifestyle.softcore,
     "LIFESTYLE"
+  ),
+  maximize: Args.custom<"pvp" | "adventures">(
+    {
+      help: "Maximize for PvP fights or Adventrues on roll",
+      default: "adventures",
+    },
+    (v) => (v === "pvp" ? "pvp" : "adventures"),
+    "MAXIMIZE"
   ),
   // different modes
   list: Args.flag({ help: "list all tasks and then exit" }),
@@ -128,7 +147,8 @@ export function currentArgs(): string[] {
           `* invoke phccs using (${args.phccs_gash_command})`,
         ]
       : []),
-    ...(args.path === smolPath ? [`* invoke loopsmol using (${args.loopsmol_command})`] : []),
+    ...(args.path === smolPath ? [`* invoke loopsmol using (${args.loopstar_command})`] : []),
+    ...(mode() === "crimbo" ? [`* invoke crimbo using (${args.crimbo_command})`] : []),
   ];
 }
 
@@ -158,8 +178,9 @@ const devExternalScripts = [
   "consume",
   "phccs",
   "phccs_gash",
-  "loopsmol",
+  "loopstar",
   "looprobot",
+  "crimbo",
 ] as const;
 type DevExternalScript = typeof devExternalScripts[number];
 const externalScripts = [
@@ -169,7 +190,6 @@ const externalScripts = [
   "loopcasual",
   "chrono",
   "moustacherider",
-  "crimbo",
 ] as const;
 type BuiltExternalScript = typeof externalScripts[number];
 
@@ -227,6 +247,8 @@ const dailyNumericProperties = [
   "halfloop_smolItems",
   "halfloop_robotMeat",
   "halfloop_robotItems",
+  "halfloop_casualMeat",
+  "halfloop_casualItems",
 ] as const;
 export type DailyNumericProperty = typeof dailyNumericProperties[number];
 export const HALFLOOP_DAILY_FLAG = "halfloop_dailyFlag";

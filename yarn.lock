@@ -2136,10 +2136,10 @@ functional-red-black-tree@^1.0.1:
   resolved "https://registry.yarnpkg.com/functional-red-black-tree/-/functional-red-black-tree-1.0.1.tgz#1b0ab3bd553b2a0d6399d29c0e3ea0b252078327"
   integrity sha1-GwqzvVU7Kg1jmdKcDj6gslIHgyc=
 
-garbo-lib@^0.0.6:
-  version "0.0.6"
-  resolved "https://registry.yarnpkg.com/garbo-lib/-/garbo-lib-0.0.6.tgz#e657b73fa004ba83b60ba351995ba87d22dfd1b2"
-  integrity sha512-OHRQR4pIM90AMTUbdCx81A8TMV43SWXCMTYbIg8jEbxOlCU4BlomoWQTPYLn7FsmaxTl5q88uVVi6KJo4gLfYg==
+garbo-lib@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/garbo-lib/-/garbo-lib-1.0.2.tgz#fcba5efb37f9a8e4fc051f802c4f1aef4d010395"
+  integrity sha512-hwB70pLiuDGVs8Iva7M9jsxbI5fQRPVf/yKzJShHFgzf8vjkZu3q92O+tt2FGLTMOO1mE7VcGRnedQ0GPuBj3A==
 
 gensync@^1.0.0-beta.2:
   version "1.0.0-beta.2"
@@ -2219,9 +2219,9 @@ graceful-fs@^4.1.11, graceful-fs@^4.1.2, graceful-fs@^4.2.4:
   integrity sha512-qkIilPUYcNhJpd33n0GBXTB1MMPp14TxEsEs0pTrsSVucApsYzW5V+Q8Qxhik6KU3evy+qkAAowTByymK0avdg==
 
 grimoire-kolmafia@^0.3.5:
-  version "0.3.5"
-  resolved "https://registry.yarnpkg.com/grimoire-kolmafia/-/grimoire-kolmafia-0.3.5.tgz#0d2236007c0eb2b38cb9ad4103c46608a59e7bbc"
-  integrity sha512-qcc+wUivFVfFUlefLJMqJzNCnnK5krcf1P/tL20Ni168g9mdvX8aRKXjLIkupaNsLrd0zeCdba/d9lnAc7ITMQ==
+  version "0.3.26"
+  resolved "https://registry.yarnpkg.com/grimoire-kolmafia/-/grimoire-kolmafia-0.3.26.tgz#651eeb440f1ae29be9c209abd4848638e2fae990"
+  integrity sha512-lePvPPpFsHBdjtA+nxwfPXu0eKyDt4kLEeTo3Alhe8NE1iFG6nMo9HypQPOKXstjUdSPVu0Uj2bR9cwdAQPZDw==
   dependencies:
     core-js "^3.16.4"
 
@@ -2278,10 +2278,10 @@ has@^1.0.3:
   dependencies:
     function-bind "^1.1.1"
 
-html-entities@^2.4.0:
-  version "2.4.0"
-  resolved "https://registry.yarnpkg.com/html-entities/-/html-entities-2.4.0.tgz#edd0cee70402584c8c76cc2c0556db09d1f45061"
-  integrity sha512-igBTJcNNNhvZFRtm8uA6xMY6xYleeDwn3PeBCkDz7tHttv4F2hsDI2aPgNERWzvRcNYHNT3ymRaQzllmXj4YsQ==
+html-entities@^2.4.0, html-entities@^2.5.2:
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/html-entities/-/html-entities-2.6.0.tgz#7c64f1ea3b36818ccae3d3fb48b6974208e984f8"
+  integrity sha512-kig+rMn/QOVRvr7c86gQ8lWXq+Hkv6CbAH1hLu+RG338StTpE8Z0b44SDVaqVu7HGKf27frdmUYEs9hTUX/cLQ==
 
 human-signals@^2.1.0:
   version "2.1.0"
@@ -2593,11 +2593,11 @@ levn@^0.4.1:
     type-check "~0.4.0"
 
 libram@^0.8.18:
-  version "0.8.18"
-  resolved "https://registry.yarnpkg.com/libram/-/libram-0.8.18.tgz#c160bef67029433e6f11e0a11c6abde82991c5c5"
-  integrity sha512-X7HN0EvjrS6vnrZrbtW/9GiiMAba2bnEv0y5B++KbWYYymAANZzEDD7uNPFxIUWRoIKwmWk+FTXUVIioFKAOXw==
+  version "0.8.37"
+  resolved "https://registry.yarnpkg.com/libram/-/libram-0.8.37.tgz#50ac8b7e91bd8b91d4cffb527a4fc65fef0dc29d"
+  integrity sha512-zsQj/0gVUh9Ei5mb8lAWGqL4hOBaYsxbxGPji4Smi7nXLOB8xuEjzjynrm66HxXQKEIhvxu+8LM6GfEq1w6kxw==
   dependencies:
-    html-entities "^2.4.0"
+    html-entities "^2.5.2"
 
 loader-runner@^4.2.0:
   version "4.2.0"
