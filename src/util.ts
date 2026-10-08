@@ -170,7 +170,6 @@ const externalScripts = [
   "autoscend",
   "freecandy",
   "combo",
-  "loopcasual",
   "chrono",
   "moustacherider",
 ] as const;

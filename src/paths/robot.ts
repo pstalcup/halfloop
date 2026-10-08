@@ -62,7 +62,7 @@ export const robot: PathDefinition = {
       },
       hagnk,
       breakfast,
-      liverOfSteel("loopcasual"),
+      liverOfSteel("loopstar"),
     ],
   },
 };
