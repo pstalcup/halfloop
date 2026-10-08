@@ -3,7 +3,7 @@ import { $path } from "libram";
 
 import { args, tapped } from "../util";
 
-import { ascendInto, hagnk, inPath, PathDefinition, prepareGash } from "./lib";
+import { ascendInto, breakfast, hagnk, inPath, PathDefinition, prepareGash } from "./lib";
 
 const path = $path`Standard`;
 
@@ -21,6 +21,7 @@ export const standard: PathDefinition = {
         do: () => ascendInto(path, { moon: "knoll" }),
       },
       hagnk,
+      breakfast,
     ],
   },
 };

@@ -5,6 +5,7 @@ import { args, external, statusUpdate, tapped } from "../util";
 
 import {
   ascendInto,
+  breakfast,
   breakPrism,
   hagnk,
   inPath,
@@ -60,6 +61,7 @@ export const robot: PathDefinition = {
         },
       },
       hagnk,
+      breakfast,
       liverOfSteel("loopcasual"),
     ],
   },

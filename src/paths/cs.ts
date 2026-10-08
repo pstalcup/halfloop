@@ -8,9 +8,9 @@ import {
 } from "kolmafia";
 import { $item, $path, get, Lifestyle } from "libram";
 
-import { args, cliExecuteThrow, external, tapped } from "../util";
+import { args, external, tapped } from "../util";
 
-import { hagnk, newResults, PathDefinition, trackResults } from "./lib";
+import { breakfast, breakfastDone, hagnk, newResults, PathDefinition, trackResults } from "./lib";
 
 const results = newResults();
 
@@ -52,12 +52,12 @@ export const cs: PathDefinition = {
 
           results.turns = myTurncount();
           cliExecute("refresh all");
-          cliExecuteThrow("hagnk all");
-          cliExecuteThrow("breakfast");
         },
       },
       hagnk,
+      breakfast,
     ],
-    completed: () => get("ascensionsToday") === 1 && get("questL13Final") === "finished",
+    completed: () =>
+      get("ascensionsToday") === 1 && get("questL13Final") === "finished" && breakfastDone(),
   },
 };

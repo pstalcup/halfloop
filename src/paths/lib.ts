@@ -10,6 +10,7 @@ import {
   prepareAscension,
   questStep,
   Session,
+  set,
 } from "libram";
 
 import {
@@ -93,7 +94,30 @@ export const hagnk: Task = {
   ready: () => canInteract(),
   completed: () => get("lastEmptiedStorage") === myAscensions(),
   do: () => cliExecuteThrow("hagnk all"),
-  post: () => cliExecuteThrow("breakfast"),
+};
+
+/**
+ * The ascension we last ran aftercore breakfast in. Mafia has no property that means "the
+ * breakfast command ran": `breakfastCompleted` only tracks skill casts, and `lastBreakfast` is
+ * only written by login breakfast. The leading underscore makes mafia clear this at rollover.
+ */
+const BREAKFAST_PROPERTY = "_halfloopBreakfast";
+
+function runBreakfast(): void {
+  cliExecuteThrow("breakfast");
+  set(BREAKFAST_PROPERTY, myAscensions());
+}
+
+export function breakfastDone(): boolean {
+  return get(BREAKFAST_PROPERTY, -1) === myAscensions();
+}
+
+/** Breakfast once per day per ascension, after the king is freed so aftercore settings apply */
+export const breakfast: Task = {
+  name: "breakfast",
+  ready: () => canInteract(),
+  completed: breakfastDone,
+  do: runBreakfast,
 };
 
 /** Once the Friars are done, have `script` fill our organs so we pick up Liver of Steel */

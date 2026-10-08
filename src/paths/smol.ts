@@ -16,6 +16,7 @@ import { args, cliExecuteThrow, external, statusUpdate, tapped, willAscend } fro
 
 import {
   ascendInto,
+  breakfast,
   breakPrism,
   hagnk,
   inPath,
@@ -77,6 +78,7 @@ export const smol: PathDefinition = {
         },
       },
       hagnk,
+      breakfast,
       {
         name: "smol sober up (sweat it out)",
         ready: () => canInteract() && get("_sweatOutSomeBoozeUsed") < 3,
