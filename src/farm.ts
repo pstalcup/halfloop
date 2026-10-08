@@ -1,35 +1,5 @@
 import { Quest, Task } from "grimoire-kolmafia";
 import {
-  $effect,
-  $familiar,
-  $item,
-  $location,
-  $monster,
-  $monsters,
-  $skill,
-  byClass,
-  Clan,
-  get,
-  getRemainingLiver,
-  getRemainingStomach,
-  have,
-  set,
-  StrictMacro,
-} from "libram";
-import {
-  args,
-  cliExecuteThrow,
-  external,
-  ExternalScript,
-  halloween,
-  mode,
-  ScriptArg,
-  statusUpdate,
-  tapped,
-  willAscend,
-  withMacro,
-} from "./util";
-import {
   adv1,
   availableAmount,
   canInteract,
@@ -49,17 +19,47 @@ import {
   useSkill,
   visitUrl,
 } from "kolmafia";
+import {
+  $effect,
+  $familiar,
+  $item,
+  $location,
+  $monster,
+  $monsters,
+  $skill,
+  byClass,
+  Clan,
+  get,
+  getRemainingLiver,
+  getRemainingStomach,
+  have,
+  set,
+  StrictMacro,
+} from "libram";
 
-// eslint-disable-next-line libram/verify-constants
+import {
+  args,
+  cliExecuteThrow,
+  external,
+  ExternalScript,
+  halloween,
+  mode,
+  ScriptArg,
+  statusUpdate,
+  tapped,
+  willAscend,
+  withMacro,
+} from "./util";
+
 const SNOWBALL = $item`precision snowball`;
 
 const RUNAWAY_MACRO = StrictMacro.if_(
   $monsters`giant rubber spider, time-spinner prank`,
-  StrictMacro.skill($skill`Saucegeyser`).repeat()
+  StrictMacro.skill($skill`Saucegeyser`).repeat(),
 )
   .externalIf(
     have($effect`Eldritch Attunement`),
-    StrictMacro.if_($monster`Eldritch Tentacle`, StrictMacro.skill($skill`Saucegeyser`).repeat())
+    StrictMacro.if_($monster`Eldritch Tentacle`, StrictMacro.skill($skill`Saucegeyser`).repeat()),
   )
   .runaway();
 

@@ -27,6 +27,7 @@ import {
   writeCcs,
 } from "kolmafia";
 import { $class, $familiar, $path, get, have, Lifestyle, set, StrictMacro } from "libram";
+
 import { smolPath } from "./paths/smol";
 
 const pathShortcuts = new Map([
@@ -43,7 +44,7 @@ const lifestyleShortcuts = new Map([
 ]);
 
 const modes = ["garbo", "halloween", "chrono", "auto", "crimbo"] as const;
-type Mode = typeof modes[number];
+type Mode = (typeof modes)[number];
 
 export const args = Args.create("halfloop", "Loop your brains out (on live tv)", {
   mode: Args.custom<Mode>(
@@ -52,7 +53,7 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
       default: "auto",
     },
     (v) => (modes.includes(v as Mode) ? (v as Mode) : undefined),
-    "MODE"
+    "MODE",
   ),
   pvp: Args.boolean({ help: "Run PVP fites", default: true }),
   ascend: Args.boolean({ help: "Loop today", default: true }),
@@ -96,7 +97,7 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
       default: $class`Pastamancer`,
     },
     (v: string) => toClass(v),
-    "CLASS"
+    "CLASS",
   ),
   path: Args.custom<Path>(
     {
@@ -104,7 +105,7 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
       default: $path`Community Service`,
     },
     (v: string) => pathShortcuts.get(v) ?? toPath(v),
-    "PATH"
+    "PATH",
   ),
   lifestyle: Args.custom<Lifestyle>(
     {
@@ -112,7 +113,7 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
       default: Lifestyle.softcore,
     },
     (v) => lifestyleShortcuts.get(v) ?? Lifestyle.softcore,
-    "LIFESTYLE"
+    "LIFESTYLE",
   ),
   maximize: Args.custom<"pvp" | "adventures">(
     {
@@ -120,7 +121,7 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
       default: "adventures",
     },
     (v) => (v === "pvp" ? "pvp" : "adventures"),
-    "MAXIMIZE"
+    "MAXIMIZE",
   ),
   // different modes
   list: Args.flag({ help: "list all tasks and then exit" }),
@@ -172,17 +173,15 @@ export function willAscend(): boolean {
   return args.ascend && get("ascensionsToday") === 0;
 }
 
-const devExternalScripts = [
-  "garbo",
-  "keeping_tabs",
-  "consume",
-  "phccs",
-  "phccs_gash",
-  "loopstar",
-  "looprobot",
-  "crimbo",
-] as const;
-type DevExternalScript = typeof devExternalScripts[number];
+type DevExternalScript =
+  | "garbo"
+  | "keeping_tabs"
+  | "consume"
+  | "phccs"
+  | "phccs_gash"
+  | "loopstar"
+  | "looprobot"
+  | "crimbo";
 const externalScripts = [
   "autoscend",
   "freecandy",
@@ -191,7 +190,7 @@ const externalScripts = [
   "chrono",
   "moustacherider",
 ] as const;
-type BuiltExternalScript = typeof externalScripts[number];
+type BuiltExternalScript = (typeof externalScripts)[number];
 
 export type ExternalScript = DevExternalScript | BuiltExternalScript;
 
@@ -250,14 +249,14 @@ const dailyNumericProperties = [
   "halfloop_casualMeat",
   "halfloop_casualItems",
 ] as const;
-export type DailyNumericProperty = typeof dailyNumericProperties[number];
+export type DailyNumericProperty = (typeof dailyNumericProperties)[number];
 export const HALFLOOP_DAILY_FLAG = "halfloop_dailyFlag";
 
 export function daily<T>(
   callback: (functions: {
     get: (property: DailyNumericProperty) => number;
     set: (property: DailyNumericProperty, value: number) => void;
-  }) => T
+  }) => T,
 ): T {
   if (get(HALFLOOP_DAILY_FLAG) !== todayToString()) {
     set(HALFLOOP_DAILY_FLAG, todayToString());
@@ -280,8 +279,8 @@ export function mode(): Mode {
     ? holiday().includes("Halloween")
       ? "halloween"
       : get("timeTowerAvailable")
-      ? "chrono"
-      : "garbo"
+        ? "chrono"
+        : "garbo"
     : args.mode;
 }
 

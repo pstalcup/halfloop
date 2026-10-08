@@ -1,7 +1,4 @@
 import { Args, Engine, getTasks, Task } from "grimoire-kolmafia";
-import { args, currentArgs, daily, fmt, halloween, statusUpdate } from "./util";
-import { farm } from "./farm";
-import { diet } from "./diet";
 import {
   myAdventures,
   numericModifier,
@@ -10,13 +7,17 @@ import {
   totalTurnsPlayed,
   wait,
 } from "kolmafia";
-import { pvp } from "./pvp";
 import { $item, $path, clamp, Clan, get, have, Lifestyle, sumNumbers } from "libram";
+
+import { diet } from "./diet";
+import { farm } from "./farm";
 import { autoscend, pathQuest } from "./paths";
-import { smolItems, smolMeat, smolPath, smolTurns } from "./paths/smol";
+import { casualItems, casualMeat, casualTurns } from "./paths/casual";
 import { csItems, csMeat, csTurns } from "./paths/cs";
 import { robotItems, robotMeat, robotPath, robotTurns } from "./paths/robot";
-import { casualItems, casualMeat, casualTurns } from "./paths/casual";
+import { smolItems, smolMeat, smolPath, smolTurns } from "./paths/smol";
+import { pvp } from "./pvp";
+import { args, currentArgs, daily, fmt, halloween, statusUpdate } from "./util";
 
 class HalfloopEngine extends Engine {
   turns: Map<string, number[]> = new Map();
@@ -88,7 +89,7 @@ export function main(command = ""): void {
       const available = engine.available(task);
       print(
         `* ${task.name} ${available ? "available" : "unavailable"}`,
-        available ? "black" : "red"
+        available ? "black" : "red",
       );
     }
     print(`Next task: ${engine.getNextTask()?.name}`);

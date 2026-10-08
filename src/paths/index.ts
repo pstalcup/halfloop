@@ -1,12 +1,14 @@
-import { canInteract, myPath } from "kolmafia";
-import { args, external } from "../util";
 import { Quest, Task } from "grimoire-kolmafia";
+import { canInteract, myPath } from "kolmafia";
 import { $path, $paths, getRemainingLiver } from "libram";
+
+import { args, external } from "../util";
+
+import { casual } from "./casual";
 import { cs } from "./cs";
+import { robot } from "./robot";
 import { smol } from "./smol";
 import { standard } from "./standard";
-import { robot } from "./robot";
-import { casual } from "./casual";
 
 const uniquePaths = $paths`Community Service, A Shrunken Adventurer am I`;
 

@@ -1,6 +1,4 @@
 import { Quest, Task } from "grimoire-kolmafia";
-import { $item, get, Lifestyle, Session } from "libram";
-import { args, cliExecuteThrow, external, halfloopValue, tapped } from "../util";
 import {
   canInteract,
   cliExecute,
@@ -11,6 +9,9 @@ import {
   pvpAttacksLeft,
   takeCloset,
 } from "kolmafia";
+import { $item, get, Lifestyle, Session } from "libram";
+
+import { args, cliExecuteThrow, external, halfloopValue, tapped } from "../util";
 
 export let csMeat = 0;
 export let csItems = 0;
@@ -32,7 +33,7 @@ export const cs: Quest<Task> = {
         external(
           "phccs_gash",
           `${args.lifestyle === Lifestyle.hardcore ? "hardcore" : "softcore"}`,
-          { key: "class", value: `${args.class}` }
+          { key: "class", value: `${args.class}` },
         ),
     },
     {

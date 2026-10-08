@@ -14,17 +14,6 @@ import {
   visitUrl,
 } from "kolmafia";
 import {
-  args,
-  ascensionCheck,
-  cliExecuteThrow,
-  external,
-  halfloopValue,
-  skillsToPerm,
-  statusUpdate,
-  tapped,
-  willAscend,
-} from "../util";
-import {
   $item,
   $path,
   $skill,
@@ -37,6 +26,18 @@ import {
   questStep,
   Session,
 } from "libram";
+
+import {
+  args,
+  ascensionCheck,
+  cliExecuteThrow,
+  external,
+  halfloopValue,
+  skillsToPerm,
+  statusUpdate,
+  tapped,
+  willAscend,
+} from "../util";
 
 export const smolPath = $path`A Shrunken Adventurer am I`;
 export let smolMeat = 0;
