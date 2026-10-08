@@ -12,6 +12,7 @@ import { args, external, statusUpdate, tapped, willAscend } from "../util";
 
 import {
   ascendInto,
+  breakfast,
   breakPrism,
   hagnk,
   inPath,
@@ -63,6 +64,7 @@ export const casual: PathDefinition = {
         do: breakPrism,
       },
       hagnk,
+      breakfast,
     ],
   },
 };

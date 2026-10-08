@@ -10,7 +10,7 @@ import { $item, $path, get, Lifestyle } from "libram";
 
 import { args, cliExecuteThrow, external, tapped } from "../util";
 
-import { hagnk, newResults, PathDefinition, trackResults } from "./lib";
+import { hagnk, newResults, PathDefinition, runBreakfast, trackResults } from "./lib";
 
 const results = newResults();
 
@@ -53,7 +53,7 @@ export const cs: PathDefinition = {
           results.turns = myTurncount();
           cliExecute("refresh all");
           cliExecuteThrow("hagnk all");
-          cliExecuteThrow("breakfast");
+          runBreakfast();
         },
       },
       hagnk,
