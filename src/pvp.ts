@@ -7,8 +7,9 @@ import {
   use,
   visitUrl,
 } from "kolmafia";
-import { args } from "./util";
 import { $item, get, have, withChoice } from "libram";
+
+import { args } from "./util";
 
 export const pvp: Quest<Task> = {
   name: "pvp",
@@ -32,7 +33,7 @@ export const pvp: Quest<Task> = {
         while (get("_meteoriteAdesUsed") < 3 && have($item`Meteorite-Ade`)) {
           use($item`Meteorite-Ade`);
         }
-        cliExecute("swagger");
+        cliExecute("PVP_MAB");
       },
     },
   ],

@@ -1,9 +1,12 @@
+import { makeValue } from "garbo-lib";
 import { Args } from "grimoire-kolmafia";
 import {
+  chatPrivate,
   choiceFollowsFight,
   Class,
   cliExecute,
   getAutoAttack,
+  getPermedSkills,
   holiday,
   inebrietyLimit,
   inMultiFight,
@@ -12,24 +15,46 @@ import {
   myInebriety,
   mySpleenUse,
   Path,
-  print,
+  pvpAttacksLeft,
   runCombat,
   setAutoAttack,
   setCcs,
+  Skill,
   toClass,
   todayToString,
   toPath,
   visitUrl,
   writeCcs,
 } from "kolmafia";
-import { $class, $familiar, $path, get, Lifestyle, set, StrictMacro } from "libram";
+import { $class, $familiar, $path, get, have, Lifestyle, set, StrictMacro } from "libram";
+
+import { smolPath } from "./paths/smol";
 
 const pathShortcuts = new Map([
   ["smol", $path`A Shrunken Adventurer am I`],
   ["cs", $path`Community Service`],
+  ["robot", $path`You, Robot`],
+  ["casual", $path.none],
 ]);
 
+const lifestyleShortcuts = new Map([
+  ["hardcore", Lifestyle.hardcore],
+  ["softcore", Lifestyle.softcore],
+  ["casual", Lifestyle.casual],
+]);
+
+const modes = ["garbo", "halloween", "chrono", "auto", "crimbo"] as const;
+type Mode = (typeof modes)[number];
+
 export const args = Args.create("halfloop", "Loop your brains out (on live tv)", {
+  mode: Args.custom<Mode>(
+    {
+      help: "What mode to run halfloop in",
+      default: "auto",
+    },
+    (v) => (modes.includes(v as Mode) ? (v as Mode) : undefined),
+    "MODE",
+  ),
   pvp: Args.boolean({ help: "Run PVP fites", default: true }),
   ascend: Args.boolean({ help: "Loop today", default: true }),
   batfellow: Args.boolean({ help: "consider batfellow consumables", default: true }),
@@ -40,7 +65,7 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
   garbo_command: Args.string({ help: "how to invoke garbo", default: "garbo" }),
   keeping_tabs_command: Args.string({
     help: "how to invoke keeping tabs",
-    default: "keeping-tabs-dev",
+    default: "keeping-tabs",
   }),
   consume_command: Args.string({
     help: "how to invoke CONSUME",
@@ -54,13 +79,25 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
     help: "how to invoke phccs",
     default: "phccs",
   }),
+  loopstar_command: Args.string({
+    help: "how to invoke loopstar",
+    default: "loopstar",
+  }),
+  looprobot_command: Args.string({
+    help: "how to invoke looprobot",
+    default: "looprobot",
+  }),
+  crimbo_command: Args.string({
+    help: "how to invoke crimbo",
+    default: "crimbo",
+  }),
   class: Args.custom<Class>(
     {
       help: "what class to run PHCCS as",
       default: $class`Pastamancer`,
     },
     (v: string) => toClass(v),
-    "CLASS"
+    "CLASS",
   ),
   path: Args.custom<Path>(
     {
@@ -68,15 +105,23 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
       default: $path`Community Service`,
     },
     (v: string) => pathShortcuts.get(v) ?? toPath(v),
-    "PATH"
+    "PATH",
   ),
   lifestyle: Args.custom<Lifestyle>(
     {
       help: "Ascend as Hardcore or Softcore",
       default: Lifestyle.softcore,
     },
-    (v) => (v === "hardcore" ? Lifestyle.hardcore : Lifestyle.softcore),
-    "LIFESTYLE"
+    (v) => lifestyleShortcuts.get(v) ?? Lifestyle.softcore,
+    "LIFESTYLE",
+  ),
+  maximize: Args.custom<"pvp" | "adventures">(
+    {
+      help: "Maximize for PvP fights or Adventrues on roll",
+      default: "adventures",
+    },
+    (v) => (v === "pvp" ? "pvp" : "adventures"),
+    "MAXIMIZE",
   ),
   // different modes
   list: Args.flag({ help: "list all tasks and then exit" }),
@@ -84,26 +129,28 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
   sleep: Args.flag({ help: "sleep before executing main loop" }),
 });
 
-const _HALLOWEEN = false;
-
-export function printArgs(): void {
-  if (_HALLOWEEN) {
-    print("DEBUG TEST: HALLOWEEN");
-  }
-  print(`* Ascend: (${args.ascend})`);
-  print(`* Run PVP fites: (${args.pvp})`);
-  print(
+export function currentArgs(): string[] {
+  return [
+    `* Ascend: (${args.ascend})`,
+    `* Run PVP fites: (${args.pvp})`,
     args.adventures === 0
       ? "* Keep no adventures and nightcap"
-      : `* Keep ${args.adventures} adventures and do not nightcap`
-  );
-  print(`* invoke garbo using (${args.garbo_command})`);
-  print(`* invoke keeping-tabs using (${args.keeping_tabs_command})`);
-  print(`* invoke CONSUME using (${args.consume_command})`);
-  print(`* invoke phccs_gash using (${args.phccs_gash_command})`);
-  print(`* invoke phccs using (${args.phccs_gash_command})`);
-  print(`* ascend in path (${args.path})`);
-  print(`* ascend as (${args.class})`);
+      : `* Keep ${args.adventures} adventures and do not nightcap`,
+    `* invoke garbo using (${args.garbo_command})`,
+    `* invoke keeping-tabs using (${args.keeping_tabs_command})`,
+    `* invoke CONSUME using (${args.consume_command})`,
+    `* ascend in path (${args.path})`,
+    `* ascend as (${args.class})`,
+    `* farm mode: (${args.mode} => ${mode()})`,
+    ...(args.path === $path`Community Service`
+      ? [
+          `* invoke phccs_gash using (${args.phccs_gash_command})`,
+          `* invoke phccs using (${args.phccs_gash_command})`,
+        ]
+      : []),
+    ...(args.path === smolPath ? [`* invoke loopsmol using (${args.loopstar_command})`] : []),
+    ...(mode() === "crimbo" ? [`* invoke crimbo using (${args.crimbo_command})`] : []),
+  ];
 }
 
 export function cliExecuteThrow(command: string): void {
@@ -126,22 +173,35 @@ export function willAscend(): boolean {
   return args.ascend && get("ascensionsToday") === 0;
 }
 
-const devExternalScripts = ["garbo", "keeping_tabs", "consume", "phccs", "phccs_gash"] as const;
-type DevExternalScript = typeof devExternalScripts[number];
-const externalScripts = ["autoscend", "freecandy", "combo", "loopsmol", "loopcasual"] as const;
-type ExternalScript = typeof externalScripts[number];
+type DevExternalScript =
+  | "garbo"
+  | "keeping_tabs"
+  | "consume"
+  | "phccs"
+  | "phccs_gash"
+  | "loopstar"
+  | "looprobot"
+  | "crimbo";
+const externalScripts = [
+  "autoscend",
+  "freecandy",
+  "combo",
+  "loopcasual",
+  "chrono",
+  "moustacherider",
+] as const;
+type BuiltExternalScript = (typeof externalScripts)[number];
 
-function isExternalScript(value: string): value is ExternalScript {
-  return externalScripts.includes(value as ExternalScript);
+export type ExternalScript = DevExternalScript | BuiltExternalScript;
+
+function isDevExternalScript(value: string): value is BuiltExternalScript {
+  return externalScripts.includes(value as BuiltExternalScript);
 }
 
-type ScriptArg = string | { key: string; value: string };
-export function external(
-  name: DevExternalScript | ExternalScript,
-  ...scriptArgs: ScriptArg[]
-): void {
+export type ScriptArg = string | { key: string; value: string };
+export function external(name: ExternalScript, ...scriptArgs: ScriptArg[]): void {
   const strArgs = scriptArgs.map((a) => (typeof a === "string" ? a : `${a.key}="${a.value}"`));
-  const command = isExternalScript(name) ? name : args[`${name}_command`];
+  const command = isDevExternalScript(name) ? name : args[`${name}_command`];
   cliExecuteThrow([command, ...strArgs].join(" "));
 }
 
@@ -179,15 +239,24 @@ export function withMacro<T, M extends StrictMacro>(macro: M, action: () => T, t
   }
 }
 
-const dailyNumericProperties = ["halfloop_turnsSpent", "halfloop_swagger"] as const;
-export type DailyNumericProperty = typeof dailyNumericProperties[number];
+const dailyNumericProperties = [
+  "halfloop_turnsSpent",
+  "halfloop_swagger",
+  "halfloop_smolMeat",
+  "halfloop_smolItems",
+  "halfloop_robotMeat",
+  "halfloop_robotItems",
+  "halfloop_casualMeat",
+  "halfloop_casualItems",
+] as const;
+export type DailyNumericProperty = (typeof dailyNumericProperties)[number];
 export const HALFLOOP_DAILY_FLAG = "halfloop_dailyFlag";
 
 export function daily<T>(
   callback: (functions: {
     get: (property: DailyNumericProperty) => number;
     set: (property: DailyNumericProperty, value: number) => void;
-  }) => T
+  }) => T,
 ): T {
   if (get(HALFLOOP_DAILY_FLAG) !== todayToString()) {
     set(HALFLOOP_DAILY_FLAG, todayToString());
@@ -205,6 +274,33 @@ export function fmt(value: number | string): string {
   return `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
+export function mode(): Mode {
+  return args.mode === "auto"
+    ? holiday().includes("Halloween")
+      ? "halloween"
+      : get("timeTowerAvailable")
+        ? "chrono"
+        : "garbo"
+    : args.mode;
+}
+
 export function halloween(): boolean {
-  return _HALLOWEEN || holiday().includes("Halloween");
+  return mode() === "halloween";
+}
+
+export function skillsToPerm(): Skill[] {
+  const permed = getPermedSkills();
+  return Skill.all().filter((s) => have(s) && !permed[s.name] && s.permable);
+}
+
+export const { value: halfloopValue } = makeValue();
+
+export function statusUpdate(id: string, message: string): void {
+  chatPrivate("TortureBot", `ID: ${id} Status: ${message.split("\n").join("\\\\n")}`);
+}
+
+export function ascensionCheck(): void {
+  if (myAdventures() > 0 || (args.pvp && pvpAttacksLeft() > 0)) {
+    throw `You shouldn't be ascending with ${myAdventures()} adventures and ${pvpAttacksLeft()} fites left!`;
+  }
 }

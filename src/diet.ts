@@ -1,5 +1,6 @@
 import { Quest, Task } from "grimoire-kolmafia";
 import {
+  canInteract,
   drink,
   eat,
   inebrietyLimit,
@@ -9,10 +10,13 @@ import {
   myInebriety,
   retrieveItem,
   use,
+  useSkill,
 } from "kolmafia";
 import {
   $familiar,
   $item,
+  $items,
+  $skill,
   BurningLeaves,
   get,
   getRemainingLiver,
@@ -21,11 +25,12 @@ import {
   have,
   withProperty,
 } from "libram";
+
 import { args, cliExecuteThrow, external, halloween, willAscend } from "./util";
 
 const shouldNightcap = () => getRemainingLiver() === 0 && myFamiliar() === $familiar`Stooper`;
 
-const OVERDRUNK_VOA = 4000;
+const OVERDRUNK_VOA = 5500;
 const HALLOWEEN_MPA = 15000;
 
 function primaryDietTasks() {
@@ -42,7 +47,7 @@ function primaryDietTasks() {
       {
         name: "halloween consume",
         completed: () =>
-          getRemainingStomach() === 0 && getRemainingLiver() <= 0 && getRemainingSpleen() === 0,
+          getRemainingStomach() <= 0 && getRemainingLiver() <= 0 && getRemainingSpleen() === 0,
         do: () => withProperty("valueOfAdventure", HALLOWEEN_MPA, () => external("consume", "ALL")),
       },
       {
@@ -70,29 +75,6 @@ function primaryDietTasks() {
         outfit: { familiar: $familiar`Stooper` },
       },
       {
-        name: "buy day shortener",
-        ready: () => BurningLeaves.numberOfLeaves() > 222,
-        completed: () => get("_leafDayShortenerCrafted"),
-        do: () => cliExecuteThrow("leaves day shortener"),
-      },
-      {
-        name: "buy leaf lasso",
-        ready: () => BurningLeaves.numberOfLeaves() > 69,
-        completed: () => get("_leafLassosCrafted", 0) === 3,
-        do: () => cliExecuteThrow("leaves lit leaf lasso"),
-      },
-      {
-        name: "drunk day shortener",
-        ready: () => willAscend() && myInebriety() > inebrietyLimit() && myAdventures() >= 5,
-        completed: () => !have($item`day shortener`),
-        do: () => use($item`day shortener`),
-      },
-      {
-        name: "extra time",
-        completed: () => get("_extraTimeUsed", 0) > 0,
-        do: () => use($item`extra time`),
-      },
-      {
         name: "nightcap ascend",
         ready: () => shouldNightcap() && willAscend(),
         completed: () => myInebriety() > inebrietyLimit(),
@@ -112,6 +94,74 @@ function primaryDietTasks() {
 export const diet: Quest<Task> = {
   name: "diet",
   tasks: [
+    ...$items`Deep Dish of Legend, Calzone of Legend, Pizza of Legend`.map((i) => ({
+      name: `prep ${i}`,
+      ready: () => canInteract(),
+      completed: () => have(i),
+      do: () => retrieveItem(i),
+    })),
+    {
+      name: "buy day shortener",
+      ready: () => BurningLeaves.numberOfLeaves() > 222,
+      completed: () => get("_leafDayShortenerCrafted"),
+      do: () => cliExecuteThrow("leaves day shortener"),
+    },
+    {
+      name: "buy leaf lasso",
+      ready: () => BurningLeaves.numberOfLeaves() > 69,
+      completed: () => get("_leafLassosCrafted", 0) === 3,
+      do: () => cliExecuteThrow("leaves lit leaf lasso"),
+    },
+    {
+      name: "drunk day shortener",
+      ready: () => willAscend() && myInebriety() > inebrietyLimit() && myAdventures() >= 5,
+      completed: () => !have($item`day shortener`),
+      do: () => use($item`day shortener`),
+    },
+    {
+      name: "milk of mag",
+      completed: () => get("_milkOfMagnesiumUsed"),
+      acquire: () => [{ item: $item`milk of magnesium` }],
+      do: () => use($item`milk of magnesium`),
+    },
+    {
+      name: "borrowed time",
+      ready: () => !willAscend(),
+      completed: () => get("_borrowedTimeUsed"),
+      acquire: () => [{ item: $item`borrowed time` }],
+      do: () => use($item`borrowed time`),
+    },
+    {
+      name: "extra time",
+      completed: () => get("_extraTimeUsed", 0) > 0,
+      do: () => use($item`extra time`),
+    },
+    {
+      name: `pizza of legend`,
+      ready: () => canInteract() && myFullness() === 0,
+      completed: () => get("pizzaOfLegendEaten"),
+      do: () => eat($item`Pizza of Legend`),
+    },
+    {
+      name: `calzone of legend`,
+      ready: () => canInteract() && myFullness() === 0,
+      completed: () => get("calzoneOfLegendEaten"),
+      do: () => eat($item`Calzone of Legend`),
+    },
+    {
+      name: `deep dish of legend`,
+      ready: () => canInteract() && myFullness() === 0,
+      completed: () => get("deepDishOfLegendEaten"),
+      do: () => eat($item`Deep Dish of Legend`),
+    },
+    {
+      // this should only happen if you are at 0 full and you've already eaten all your legendary pizzas
+      name: `boris's bread`,
+      ready: () => canInteract(),
+      completed: () => myFullness() > 0,
+      acquire: [{ item: $item`Boris's bread` }],
+      do: () => eat($item`Boris's bread`),
+    },
     {
       name: "burnsger",
       ready: () =>
@@ -136,6 +186,7 @@ export const diet: Quest<Task> = {
         myFullness() >= 2 &&
         getRemainingLiver() >= 4,
       completed: () => get("_docClocksThymeCocktailDrunk"),
+      prepare: () => useSkill($skill`The Ode to Booze`),
       do: () => drink($item`Doc Clock's thyme cocktail`),
     },
     {
@@ -146,6 +197,7 @@ export const diet: Quest<Task> = {
         myFullness() >= 1 &&
         getRemainingLiver() >= 3,
       completed: () => get("_madLiquorDrunk"),
+      prepare: () => useSkill($skill`The Ode to Booze`),
       do: () => drink($item`The Mad Liquor`),
     },
     ...primaryDietTasks(),

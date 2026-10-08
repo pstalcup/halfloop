@@ -1,11 +1,23 @@
 import { Args, Engine, getTasks, Task } from "grimoire-kolmafia";
-import { args, daily, fmt, halloween, printArgs } from "./util";
-import { farm } from "./farm";
+import {
+  myAdventures,
+  numericModifier,
+  print,
+  pvpAttacksLeft,
+  totalTurnsPlayed,
+  wait,
+} from "kolmafia";
+import { $item, $path, clamp, Clan, get, have, Lifestyle, sumNumbers } from "libram";
+
 import { diet } from "./diet";
-import { print, totalTurnsPlayed, wait } from "kolmafia";
-import { pvp } from "./pvp";
-import { get } from "libram";
+import { farm } from "./farm";
 import { autoscend, pathQuest } from "./paths";
+import { casualItems, casualMeat, casualTurns } from "./paths/casual";
+import { csItems, csMeat, csTurns } from "./paths/cs";
+import { robotItems, robotMeat, robotPath, robotTurns } from "./paths/robot";
+import { smolItems, smolMeat, smolPath, smolTurns } from "./paths/smol";
+import { pvp } from "./pvp";
+import { args, currentArgs, daily, fmt, halloween, statusUpdate } from "./util";
 
 class HalfloopEngine extends Engine {
   turns: Map<string, number[]> = new Map();
@@ -25,13 +37,36 @@ class HalfloopEngine extends Engine {
   }
 }
 
+function rolloverTurns() {
+  const base =
+    myAdventures() +
+    40 +
+    numericModifier("Adventures") +
+    clamp(2 * get("_resolutionAdv"), 0, 10) +
+    get("_gibbererAdv") +
+    get("_hareAdv");
+
+  return [
+    clamp(base, 0, 200) +
+      (have($item`potato alarm clock`) ? 5 : 0) +
+      (have($item`etched hourglass`) ? 5 : 0),
+    base - clamp(base, 0, 200),
+  ];
+}
+
+function rolloverFites() {
+  return pvpAttacksLeft() + 10 + numericModifier("PvP Fights");
+}
+
 export function main(command = ""): void {
   Args.fill(args, command);
+
+  Clan.join("Bonus Adventures From Hell"); // make sure you start in the right place
 
   const startingTurns = totalTurnsPlayed();
   const startingSwagger = get("availableSwagger");
 
-  const tasks = getTasks([pvp, autoscend, pathQuest(), diet, farm]);
+  const tasks = getTasks([pvp, autoscend, pathQuest(), diet, farm()]);
   const engine = new HalfloopEngine(tasks);
 
   if (args.help) {
@@ -43,6 +78,7 @@ export function main(command = ""): void {
     print("Trick or Treat!");
   }
 
+  statusUpdate("start", "Starting Halfloop");
   print("Welcome to Halfloop");
   print(" Run Options:");
   print(" ");
@@ -53,14 +89,19 @@ export function main(command = ""): void {
       const available = engine.available(task);
       print(
         `* ${task.name} ${available ? "available" : "unavailable"}`,
-        available ? "black" : "red"
+        available ? "black" : "red",
       );
     }
     print(`Next task: ${engine.getNextTask()?.name}`);
     return;
   }
 
-  printArgs();
+  const runArgs = currentArgs();
+
+  statusUpdate("args1", runArgs.slice(0, 4).join("\n"));
+  statusUpdate("args2", runArgs.slice(4).join("\n"));
+
+  runArgs.forEach((a) => print(a));
 
   if (args.args) return;
 
@@ -77,21 +118,94 @@ export function main(command = ""): void {
     const endingTurns = totalTurnsPlayed();
     const endingSwagger = get("availableSwagger");
 
-    const [totalTurnsSpent, totalSwagger] = daily(({ get, set }) => {
+    const [totalTurnsSpent, totalSwagger, totalMeat, totalItems] = daily(({ get, set }) => {
       set("halfloop_turnsSpent", get("halfloop_turnsSpent") + (endingTurns - startingTurns));
       set("halfloop_swagger", get("halfloop_swagger") + (endingSwagger - startingSwagger));
-      return [get("halfloop_turnsSpent"), get("halfloop_swagger")];
+      set("halfloop_smolMeat", get("halfloop_smolMeat") + smolMeat);
+      set("halfloop_smolItems", get("halfloop_smolItems") + smolItems);
+      set("halfloop_robotMeat", get("halfloop_robotMeat") + robotMeat);
+      set("halfloop_robotItems", get("halfloop_robotItems") + robotItems);
+      set("halfloop_casualMeat", get("halfloop_casualMeat") + casualMeat);
+      set("halfloop_casualItems", get("halfloop_casualItems") + casualItems);
+      return [
+        get("halfloop_turnsSpent"),
+        get("halfloop_swagger"),
+        {
+          smol: get("halfloop_smolMeat"),
+          robot: get("halfloop_robotMeat"),
+          cs: csMeat,
+          casual: get("halfloop_casualMeat"),
+        },
+        {
+          smol: get("halfloop_smolItems"),
+          robot: get("halfloop_robotItems"),
+          cs: csItems,
+          casual: get("halfloop_casualItems"),
+        },
+      ];
     });
+    const pathTurns = {
+      smol: smolTurns,
+      robot: robotTurns,
+      cs: csTurns,
+      casual: casualTurns,
+    };
 
-    const meat = get("garboResultsMeat", 0);
-    const item = get("garboResultsItems", 0);
+    const garboMeat = get("garboResultsMeat", 0);
+    const garboItems = get("garboResultsItems", 0);
+    const garboTurns = get("garboResultsTurns", 0);
     const embezzlers = get("garboEmbezzlerCount", 0);
-    const yachtzees = get("garboYachtzeeCount", 0);
+    const [turns, lostTurns] = rolloverTurns();
+
+    const meat = sumNumbers([
+      garboMeat,
+      totalMeat["smol"],
+      totalMeat["robot"],
+      totalMeat["casual"],
+      csMeat,
+    ]);
+    const items = sumNumbers([
+      garboItems,
+      totalItems["smol"],
+      totalItems["robot"],
+      totalItems["casual"],
+      csItems,
+    ]);
+
+    const results = (meat: number, items: number) =>
+      `${fmt(meat)} meat + ${fmt(items)} items = ${fmt(meat + items)}`;
+
+    const resultMessage = (title: string, message: string, color = "black") => {
+      statusUpdate(`r${title.replace(" ", "").toLowerCase()}`, `${title} ${message}`);
+      print(`* ${title}: ${message}`, color);
+    };
 
     print("Final Results");
-    print(`* Total Turns Spent: ${totalTurnsSpent}`);
-    print(`* Garbo Results: ${fmt(meat)} meat + ${fmt(item)} items = ${fmt(meat + item)}`);
-    print(`* Garbo Actions: ${fmt(embezzlers)} embezzlers and ${fmt(yachtzees)} yachtzees`);
-    print(`* Swagger: ${fmt(totalSwagger)}`);
+    resultMessage("Total Turns", `${totalTurnsSpent}`);
+    resultMessage("Garbo Results", `${results(garboMeat, garboItems)}`);
+    resultMessage("Garbo Actions", `${fmt(garboTurns)} turns, ${fmt(embezzlers)} embezzlers`);
+
+    const pathSummary = (name: "robot" | "smol" | "cs" | "casual") => {
+      resultMessage(`${name} Results`, `${results(totalMeat[name], totalItems[name])}`);
+      resultMessage(`${name} Summary`, `${fmt(pathTurns[name])} turns`);
+    };
+
+    if (args.path === smolPath) {
+      pathSummary("smol");
+    }
+    if (args.path === robotPath) {
+      pathSummary("robot");
+    }
+    if (args.path === $path`Community Service`) {
+      pathSummary("cs");
+    }
+    if (args.lifestyle === Lifestyle.casual) {
+      pathSummary("casual");
+    }
+    resultMessage("Overall Results", `${results(meat, items)}`);
+    resultMessage("Swagger", `${fmt(totalSwagger)}`);
+    resultMessage("Turns Tomorrow", `${turns} (after potato and hourglass)`);
+    resultMessage("Fights Tomorrow", `${rolloverFites()}`);
+    resultMessage("Lost Turns", `${lostTurns} to rollover`);
   }
 }

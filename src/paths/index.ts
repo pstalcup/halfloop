@@ -1,8 +1,12 @@
-import { canInteract, myPath } from "kolmafia";
-import { args, external } from "../util";
 import { Quest, Task } from "grimoire-kolmafia";
+import { canInteract, myPath } from "kolmafia";
 import { $path, $paths, getRemainingLiver } from "libram";
+
+import { args, external } from "../util";
+
+import { casual } from "./casual";
 import { cs } from "./cs";
+import { robot } from "./robot";
 import { smol } from "./smol";
 import { standard } from "./standard";
 
@@ -27,6 +31,10 @@ export function pathQuest(): Quest<Task> {
     return smol;
   } else if (args.path === $path`Standard`) {
     return standard;
+  } else if (args.path === $path`You, Robot`) {
+    return robot;
+  } else if (args.path === $path.none) {
+    return casual;
   }
   throw `Unsupported Path ${args.path}`;
 }

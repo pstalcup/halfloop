@@ -3,63 +3,73 @@ import {
   abort,
   canInteract,
   drink,
+  floristAvailable,
   handlingChoice,
-  myAdventures,
   myAscensions,
   myPath,
-  pvpAttacksLeft,
-  retrieveItem,
+  myTurncount,
   runChoice,
   use,
   useSkill,
   visitUrl,
 } from "kolmafia";
-import { args, cliExecuteThrow, external, tapped } from "../util";
 import {
   $item,
-  $items,
   $path,
   $skill,
   ascend,
   get,
   getRemainingLiver,
-  getRemainingSpleen,
   have,
+  Lifestyle,
   prepareAscension,
   questStep,
+  Session,
 } from "libram";
 
-const smolPath = $path`A Shrunken Adventurer am I`;
+import {
+  args,
+  ascensionCheck,
+  cliExecuteThrow,
+  external,
+  halfloopValue,
+  skillsToPerm,
+  statusUpdate,
+  tapped,
+  willAscend,
+} from "../util";
+
+export const smolPath = $path`A Shrunken Adventurer am I`;
+export let smolMeat = 0;
+export let smolItems = 0;
+export let smolTurns = 0;
 
 export const smol: Quest<Task> = {
   name: "smol",
   tasks: [
-    ...$items`Deep Dish of Legend, Calzone of Legend, Pizza of Legend`.map((i) => ({
-      name: `prep ${i}`,
-      ready: () => canInteract(),
-      completed: () => have(i),
-      do: () => retrieveItem(i),
-    })),
     {
       name: "smol gash",
       prepare: (): void => {
-        if (myAdventures() > 0 || pvpAttacksLeft() > 0) {
-          throw `You shouldn't be ascending with ${myAdventures()} adventures and ${pvpAttacksLeft()} fites left!`;
-        }
+        ascensionCheck();
         const garden = "packet of rock seeds";
         const eudora = "Our Daily Candles™ order form";
         prepareAscension({ garden, eudora });
       },
-      ready: () => tapped(true) && args.ascend,
+      ready: () => tapped(true) && willAscend(),
       completed: () => !canInteract() && myPath() === smolPath,
       do: (): void => {
+        statusUpdate("loopsmolstart", "Jumping gash into smol");
         ascend({
           path: smolPath,
           playerClass: args.class,
           lifestyle: args.lifestyle,
-          moon: "knoll",
+          moon: "platypus",
           pet: $item`astral belt`,
           consumable: $item`astral six-pack`,
+          permOptions: {
+            permSkills: new Map(skillsToPerm().map((s) => [s, Lifestyle.hardcore])),
+            neverAbort: false,
+          },
         });
         visitUrl("main.php");
         while (handlingChoice()) runChoice(1);
@@ -68,9 +78,20 @@ export const smol: Quest<Task> = {
     {
       name: "loopsmol",
       ready: () => myPath() === smolPath,
-      completed: () => canInteract(),
+      completed: () => canInteract() || questStep("questL13Final") === 13,
       do: (): void => {
-        external("loopsmol");
+        statusUpdate("loopsmolstart", "Starting `loopsmol`");
+
+        floristAvailable();
+        const start = Session.current();
+        external("loopstar");
+        const end = Session.current();
+
+        const { meat, items } = Session.diff(end, start).value(halfloopValue);
+        smolMeat = meat;
+        smolItems = items;
+
+        statusUpdate("loopsmolend", "Done with `loopsmol`");
       },
     },
     {
@@ -79,6 +100,8 @@ export const smol: Quest<Task> = {
       completed: () => canInteract(),
       do: (): void => {
         drink($item`astral pilsner`);
+        smolTurns = myTurncount();
+        statusUpdate("loopsmolprism", `Breaking smol prism. That took ${smolTurns} turns`);
         visitUrl("place.php?whichplace=nstower&action=ns_11_prism");
       },
       post: (): void => {
@@ -126,7 +149,7 @@ export const smol: Quest<Task> = {
       ready: () => questStep("questL06Friar") === 999,
       completed: () => have($skill`Liver of Steel`),
       do: (): void => {
-        external("loopcasual", { key: "goal", value: "organ" });
+        external("loopstar", { key: "goal", value: "organ" });
       },
     },
   ],
