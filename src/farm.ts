@@ -226,7 +226,8 @@ export const farm: () => Quest<Task> = () => ({
           useSkill($skill`Aug. 13th: Left/Off Hander's Day!`);
         }
       },
-      completed: () => numericModifier("Adventures") > 50,
+      completed: () =>
+        numericModifier(args.maximize === "adventures" ? "Adventures" : "PvP Fights") > 50,
       do: (): void => {
         const maxTarget = args.maximize === "adventures" ? "+adv" : "+fites";
         const maxClan =
