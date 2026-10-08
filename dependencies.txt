@@ -2,6 +2,7 @@
 github loathers/garbage-collector release
 github loathers/keeping-tabs release
 github soolar/CONSUME.ash
+github spaghetti-squash/phccs release
 github loathers/autoscend
 github loathers/combo release
 github loathers/chrono-collector release
