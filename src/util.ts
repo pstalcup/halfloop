@@ -14,7 +14,6 @@ import {
   myFamiliar,
   myInebriety,
   mySpleenUse,
-  Path,
   pvpAttacksLeft,
   runCombat,
   setAutoAttack,
@@ -22,20 +21,10 @@ import {
   Skill,
   toClass,
   todayToString,
-  toPath,
   visitUrl,
   writeCcs,
 } from "kolmafia";
-import { $class, $familiar, $path, get, have, Lifestyle, set, StrictMacro } from "libram";
-
-import { smolPath } from "./paths/smol";
-
-const pathShortcuts = new Map([
-  ["smol", $path`A Shrunken Adventurer am I`],
-  ["cs", $path`Community Service`],
-  ["robot", $path`You, Robot`],
-  ["casual", $path.none],
-]);
+import { $class, $familiar, get, have, Lifestyle, set, StrictMacro } from "libram";
 
 const lifestyleShortcuts = new Map([
   ["hardcore", Lifestyle.hardcore],
@@ -99,14 +88,10 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
     (v: string) => toClass(v),
     "CLASS",
   ),
-  path: Args.custom<Path>(
-    {
-      help: "What path to run as",
-      default: $path`Community Service`,
-    },
-    (v: string) => pathShortcuts.get(v) ?? toPath(v),
-    "PATH",
-  ),
+  path: Args.string({
+    help: "What path to run as: cs, smol, robot, standard, casual, or a full path name",
+    default: "cs",
+  }),
   lifestyle: Args.custom<Lifestyle>(
     {
       help: "Ascend as Hardcore or Softcore",
@@ -129,7 +114,7 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
   sleep: Args.flag({ help: "sleep before executing main loop" }),
 });
 
-export function currentArgs(): string[] {
+export function currentArgs(pathArgs: string[]): string[] {
   return [
     `* Ascend: (${args.ascend})`,
     `* Run PVP fites: (${args.pvp})`,
@@ -142,13 +127,7 @@ export function currentArgs(): string[] {
     `* ascend in path (${args.path})`,
     `* ascend as (${args.class})`,
     `* farm mode: (${args.mode} => ${mode()})`,
-    ...(args.path === $path`Community Service`
-      ? [
-          `* invoke phccs_gash using (${args.phccs_gash_command})`,
-          `* invoke phccs using (${args.phccs_gash_command})`,
-        ]
-      : []),
-    ...(args.path === smolPath ? [`* invoke loopsmol using (${args.loopstar_command})`] : []),
+    ...pathArgs,
     ...(mode() === "crimbo" ? [`* invoke crimbo using (${args.crimbo_command})`] : []),
   ];
 }
@@ -239,20 +218,15 @@ export function withMacro<T, M extends StrictMacro>(macro: M, action: () => T, t
   }
 }
 
-const dailyNumericProperties = [
-  "halfloop_turnsSpent",
-  "halfloop_swagger",
-  "halfloop_smolMeat",
-  "halfloop_smolItems",
-  "halfloop_robotMeat",
-  "halfloop_robotItems",
-  "halfloop_casualMeat",
-  "halfloop_casualItems",
-] as const;
-export type DailyNumericProperty = (typeof dailyNumericProperties)[number];
+export type DailyNumericProperty = `halfloop_${string}`;
 export const HALFLOOP_DAILY_FLAG = "halfloop_dailyFlag";
 
+/**
+ * Read and write numeric properties that reset to 0 each day
+ * @param properties Every property the callback may touch; these are zeroed on the first call of the day
+ */
 export function daily<T>(
+  properties: DailyNumericProperty[],
   callback: (functions: {
     get: (property: DailyNumericProperty) => number;
     set: (property: DailyNumericProperty, value: number) => void;
@@ -260,7 +234,7 @@ export function daily<T>(
 ): T {
   if (get(HALFLOOP_DAILY_FLAG) !== todayToString()) {
     set(HALFLOOP_DAILY_FLAG, todayToString());
-    for (const prop of dailyNumericProperties) {
+    for (const prop of properties) {
       set(prop, 0);
     }
   }

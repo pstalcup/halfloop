@@ -7,15 +7,11 @@ import {
   totalTurnsPlayed,
   wait,
 } from "kolmafia";
-import { $item, $path, clamp, Clan, get, have, Lifestyle, sumNumbers } from "libram";
+import { $item, clamp, Clan, get, have, sumNumbers } from "libram";
 
 import { diet } from "./diet";
 import { farm } from "./farm";
-import { autoscend, pathQuest } from "./paths";
-import { casualItems, casualMeat, casualTurns } from "./paths/casual";
-import { csItems, csMeat, csTurns } from "./paths/cs";
-import { robotItems, robotMeat, robotPath, robotTurns } from "./paths/robot";
-import { smolItems, smolMeat, smolPath, smolTurns } from "./paths/smol";
+import { autoscend, currentPath, PathDefinition, PathResults, paths } from "./paths";
 import { pvp } from "./pvp";
 import { args, currentArgs, daily, fmt, halloween, statusUpdate } from "./util";
 
@@ -66,7 +62,8 @@ export function main(command = ""): void {
   const startingTurns = totalTurnsPlayed();
   const startingSwagger = get("availableSwagger");
 
-  const tasks = getTasks([pvp, autoscend, pathQuest(), diet, farm()]);
+  const path = currentPath();
+  const tasks = getTasks([pvp, autoscend, path.quest, diet, farm()]);
   const engine = new HalfloopEngine(tasks);
 
   if (args.help) {
@@ -96,7 +93,7 @@ export function main(command = ""): void {
     return;
   }
 
-  const runArgs = currentArgs();
+  const runArgs = currentArgs(path.describeArgs?.() ?? []);
 
   statusUpdate("args1", runArgs.slice(0, 4).join("\n"));
   statusUpdate("args2", runArgs.slice(4).join("\n"));
@@ -118,38 +115,37 @@ export function main(command = ""): void {
     const endingTurns = totalTurnsPlayed();
     const endingSwagger = get("availableSwagger");
 
-    const [totalTurnsSpent, totalSwagger, totalMeat, totalItems] = daily(({ get, set }) => {
-      set("halfloop_turnsSpent", get("halfloop_turnsSpent") + (endingTurns - startingTurns));
-      set("halfloop_swagger", get("halfloop_swagger") + (endingSwagger - startingSwagger));
-      set("halfloop_smolMeat", get("halfloop_smolMeat") + smolMeat);
-      set("halfloop_smolItems", get("halfloop_smolItems") + smolItems);
-      set("halfloop_robotMeat", get("halfloop_robotMeat") + robotMeat);
-      set("halfloop_robotItems", get("halfloop_robotItems") + robotItems);
-      set("halfloop_casualMeat", get("halfloop_casualMeat") + casualMeat);
-      set("halfloop_casualItems", get("halfloop_casualItems") + casualItems);
-      return [
-        get("halfloop_turnsSpent"),
-        get("halfloop_swagger"),
-        {
-          smol: get("halfloop_smolMeat"),
-          robot: get("halfloop_robotMeat"),
-          cs: csMeat,
-          casual: get("halfloop_casualMeat"),
-        },
-        {
-          smol: get("halfloop_smolItems"),
-          robot: get("halfloop_robotItems"),
-          cs: csItems,
-          casual: get("halfloop_casualItems"),
-        },
-      ];
-    });
-    const pathTurns = {
-      smol: smolTurns,
-      robot: robotTurns,
-      cs: csTurns,
-      casual: casualTurns,
-    };
+    const trackedPaths = paths.filter(
+      (path): path is PathDefinition & { results: PathResults } => path.results !== undefined,
+    );
+    const meatProperty = (path: PathDefinition) => `halfloop_${path.name}Meat` as const;
+    const itemsProperty = (path: PathDefinition) => `halfloop_${path.name}Items` as const;
+
+    const [totalTurnsSpent, totalSwagger, pathTotals] = daily(
+      [
+        "halfloop_turnsSpent",
+        "halfloop_swagger",
+        ...trackedPaths.flatMap((path) => [meatProperty(path), itemsProperty(path)]),
+      ],
+      ({ get, set }) => {
+        set("halfloop_turnsSpent", get("halfloop_turnsSpent") + (endingTurns - startingTurns));
+        set("halfloop_swagger", get("halfloop_swagger") + (endingSwagger - startingSwagger));
+        for (const path of trackedPaths) {
+          set(meatProperty(path), get(meatProperty(path)) + path.results.meat);
+          set(itemsProperty(path), get(itemsProperty(path)) + path.results.items);
+        }
+        return [
+          get("halfloop_turnsSpent"),
+          get("halfloop_swagger"),
+          new Map(
+            trackedPaths.map((path) => [
+              path.name,
+              { meat: get(meatProperty(path)), items: get(itemsProperty(path)) },
+            ]),
+          ),
+        ] as const;
+      },
+    );
 
     const garboMeat = get("garboResultsMeat", 0);
     const garboItems = get("garboResultsItems", 0);
@@ -157,20 +153,8 @@ export function main(command = ""): void {
     const embezzlers = get("garboEmbezzlerCount", 0);
     const [turns, lostTurns] = rolloverTurns();
 
-    const meat = sumNumbers([
-      garboMeat,
-      totalMeat["smol"],
-      totalMeat["robot"],
-      totalMeat["casual"],
-      csMeat,
-    ]);
-    const items = sumNumbers([
-      garboItems,
-      totalItems["smol"],
-      totalItems["robot"],
-      totalItems["casual"],
-      csItems,
-    ]);
+    const meat = sumNumbers([garboMeat, ...[...pathTotals.values()].map(({ meat }) => meat)]);
+    const items = sumNumbers([garboItems, ...[...pathTotals.values()].map(({ items }) => items)]);
 
     const results = (meat: number, items: number) =>
       `${fmt(meat)} meat + ${fmt(items)} items = ${fmt(meat + items)}`;
@@ -185,22 +169,10 @@ export function main(command = ""): void {
     resultMessage("Garbo Results", `${results(garboMeat, garboItems)}`);
     resultMessage("Garbo Actions", `${fmt(garboTurns)} turns, ${fmt(embezzlers)} embezzlers`);
 
-    const pathSummary = (name: "robot" | "smol" | "cs" | "casual") => {
-      resultMessage(`${name} Results`, `${results(totalMeat[name], totalItems[name])}`);
-      resultMessage(`${name} Summary`, `${fmt(pathTurns[name])} turns`);
-    };
-
-    if (args.path === smolPath) {
-      pathSummary("smol");
-    }
-    if (args.path === robotPath) {
-      pathSummary("robot");
-    }
-    if (args.path === $path`Community Service`) {
-      pathSummary("cs");
-    }
-    if (args.lifestyle === Lifestyle.casual) {
-      pathSummary("casual");
+    const pathTotal = pathTotals.get(path.name);
+    if (path.results && pathTotal) {
+      resultMessage(`${path.name} Results`, `${results(pathTotal.meat, pathTotal.items)}`);
+      resultMessage(`${path.name} Summary`, `${fmt(path.results.turns)} turns`);
     }
     resultMessage("Overall Results", `${results(meat, items)}`);
     resultMessage("Swagger", `${fmt(totalSwagger)}`);

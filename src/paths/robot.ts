@@ -1,109 +1,66 @@
-import { Quest, Task } from "grimoire-kolmafia";
-import {
-  canInteract,
-  cliExecute,
-  myAscensions,
-  myPath,
-  myTurncount,
-  runChoice,
-  visitUrl,
-} from "kolmafia";
-import {
-  $item,
-  $path,
-  $skill,
-  ascend,
-  get,
-  have,
-  prepareAscension,
-  questStep,
-  Session,
-} from "libram";
+import { canInteract, cliExecute, myTurncount, runChoice, visitUrl } from "kolmafia";
+import { $path, questStep } from "libram";
+
+import { args, external, statusUpdate, tapped } from "../util";
 
 import {
-  args,
-  ascensionCheck,
-  cliExecuteThrow,
-  external,
-  halfloopValue,
-  statusUpdate,
-  tapped,
-} from "../util";
+  ascendInto,
+  breakPrism,
+  hagnk,
+  inPath,
+  liverOfSteel,
+  newResults,
+  PathDefinition,
+  prepareGash,
+  trackResults,
+} from "./lib";
 
-export const robotPath = $path`You, Robot`;
-export let robotItems = 0;
-export let robotMeat = 0;
-export let robotTurns = 0;
+const path = $path`You, Robot`;
+const results = newResults();
 
-export const robot: Quest<Task> = {
+export const robot: PathDefinition = {
   name: "robot",
-  tasks: [
-    {
-      name: "standard gash",
-      prepare: (): void => {
-        ascensionCheck();
-        const garden = "packet of rock seeds";
-        const eudora = "Our Daily Candles™ order form";
-        prepareAscension({ garden, eudora });
+  path,
+  results,
+  describeArgs: () => [`* invoke looprobot using (${args.looprobot_command})`],
+  quest: {
+    name: "robot",
+    tasks: [
+      {
+        name: "standard gash",
+        prepare: prepareGash,
+        ready: () => tapped(true) && args.ascend,
+        completed: () => !canInteract() && inPath(path),
+        do: (): void => {
+          ascendInto(path, { moon: "vole" });
+          if (visitUrl("main.php").includes("one made of rusty metal and scrap wiring")) {
+            runChoice(1);
+          }
+          cliExecute("refresh all");
+        },
       },
-      ready: () => tapped(true) && args.ascend,
-      completed: () => !canInteract() && myPath() === robotPath,
-      do: (): void => {
-        ascend({
-          path: robotPath,
-          playerClass: args.class,
-          lifestyle: args.lifestyle,
-          moon: "vole",
-          pet: $item`astral belt`,
-          consumable: $item`astral six-pack`,
-        });
-        if (visitUrl("main.php").includes("one made of rusty metal and scrap wiring")) runChoice(1);
-        cliExecute("refresh all");
+      {
+        name: "looprobot",
+        ready: () => inPath(path),
+        completed: () => canInteract() || questStep("questL13Final") === 13,
+        do: (): void => {
+          statusUpdate("looprobotstart", "Starting `looprobot`");
+          trackResults(results, () => external("looprobot"));
+          statusUpdate("looprobotend", "Done with `looprobot`");
+        },
       },
-    },
-
-    {
-      name: "looprobot",
-      ready: () => myPath() === robotPath,
-      completed: () => canInteract() || questStep("questL13Final") === 13,
-      do: (): void => {
-        statusUpdate("looprobotstart", "Starting `looprobot`");
-
-        const start = Session.current();
-        external("looprobot");
-        const end = Session.current();
-
-        const { meat, items } = Session.diff(end, start).value(halfloopValue);
-        robotMeat = meat;
-        robotItems = items;
-
-        statusUpdate("looprobotend", "Done with `looprobot`");
+      {
+        name: "looprobot prism break",
+        ready: () => inPath(path) && questStep("questL13Final") === 13,
+        completed: () => canInteract(),
+        do: (): void => {
+          results.turns = myTurncount();
+          statusUpdate("looprobotprism", `Breaking robot prism. That took ${results.turns} turns`);
+          breakPrism();
+        },
       },
-    },
-    {
-      name: "looprobot prism break",
-      ready: () => myPath() === robotPath && questStep("questL13Final") === 13,
-      completed: () => canInteract(),
-      do: (): void => {
-        robotTurns = myTurncount();
-        statusUpdate("looprobotprism", `Breaking roboit prism. That took ${robotTurns} turns`);
-        visitUrl("place.php?whichplace=nstower&action=ns_11_prism");
-      },
-    },
-    {
-      name: "hagnk",
-      ready: () => canInteract(),
-      completed: () => get("lastEmptiedStorage") === myAscensions(),
-      do: () => cliExecuteThrow("hagnk all"),
-      post: () => cliExecuteThrow("breakfast"),
-    },
-    {
-      name: "liver of steel",
-      ready: () => questStep("questL06Friar") === 999,
-      completed: () => have($skill`Liver of Steel`),
-      do: (): void => {
-        external("loopcasual", { key: "goal", value: "organ" });
-      },
-    },
-  ],
+      hagnk,
+      liverOfSteel("loopcasual"),
+    ],
+  },
 };

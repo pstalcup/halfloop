@@ -1,42 +1,26 @@
-import { Quest, Task } from "grimoire-kolmafia";
-import { canInteract, myAscensions, myPath } from "kolmafia";
-import { $item, $path, ascend, get, prepareAscension } from "libram";
+import { canInteract } from "kolmafia";
+import { $path } from "libram";
 
-import { args, ascensionCheck, cliExecuteThrow, tapped } from "../util";
+import { args, tapped } from "../util";
 
-const standardPath = $path`Standard`;
+import { ascendInto, hagnk, inPath, PathDefinition, prepareGash } from "./lib";
 
-export const standard: Quest<Task> = {
+const path = $path`Standard`;
+
+export const standard: PathDefinition = {
   name: "standard",
-  tasks: [
-    {
-      name: "standard gash",
-      prepare: (): void => {
-        ascensionCheck();
-        const garden = "packet of rock seeds";
-        const eudora = "Our Daily Candles™ order form";
-        prepareAscension({ garden, eudora });
+  path,
+  quest: {
+    name: "standard",
+    tasks: [
+      {
+        name: "standard gash",
+        prepare: prepareGash,
+        ready: () => tapped(true) && args.ascend,
+        completed: () => !canInteract() && inPath(path),
+        do: () => ascendInto(path, { moon: "knoll" }),
       },
-      ready: () => tapped(true) && args.ascend,
-      completed: () => !canInteract() && myPath() === standardPath,
-      do: (): void => {
-        ascend({
-          path: standardPath,
-          playerClass: args.class,
-          lifestyle: args.lifestyle,
-          moon: "knoll",
-          pet: $item`astral belt`,
-          consumable: $item`astral six-pack`,
-        });
-      },
-    },
-
-    {
-      name: "hagnk",
-      ready: () => canInteract(),
-      completed: () => get("lastEmptiedStorage") === myAscensions(),
-      do: () => cliExecuteThrow("hagnk all"),
-      post: () => cliExecuteThrow("breakfast"),
-    },
-  ],
+      hagnk,
+    ],
+  },
 };
