@@ -25835,8 +25835,29 @@ var hagnk = {
   name: "hagnk",
   ready: () => require$$0.canInteract(),
   completed: () => get$2("lastEmptiedStorage") === require$$0.myAscensions(),
-  do: () => cliExecuteThrow("hagnk all"),
-  post: () => cliExecuteThrow("breakfast")
+  do: () => cliExecuteThrow("hagnk all")
+};
+
+/**
+ * The ascension we last ran aftercore breakfast in. Mafia has no property that means "the
+ * breakfast command ran": `breakfastCompleted` only tracks skill casts, and `lastBreakfast` is
+ * only written by login breakfast. The leading underscore makes mafia clear this at rollover.
+ */
+var BREAKFAST_PROPERTY = "_halfloopBreakfast";
+function runBreakfast() {
+  cliExecuteThrow("breakfast");
+  _set(BREAKFAST_PROPERTY, require$$0.myAscensions());
+}
+function breakfastDone() {
+  return get$2(BREAKFAST_PROPERTY, -1) === require$$0.myAscensions();
+}
+
+/** Breakfast once per day per ascension, after the king is freed so aftercore settings apply */
+var breakfast = {
+  name: "breakfast",
+  ready: () => require$$0.canInteract(),
+  completed: breakfastDone,
+  do: runBreakfast
 };
 
 /** Once the Friars are done, have `script` fill our organs so we pick up Liver of Steel */
@@ -25892,7 +25913,7 @@ var casual = {
       name: "loopsmol prism break",
       completed: () => questStep("questL13Final") > 13,
       do: breakPrism
-    }, hagnk]
+    }, hagnk, breakfast]
   }
 };
 
@@ -25928,11 +25949,9 @@ var cs = {
         require$$0.takeCloset($item(_templateObject3$2 || (_templateObject3$2 = _taggedTemplateLiteral(["Leprecondo"]))));
         results$2.turns = require$$0.myTurncount();
         require$$0.cliExecute("refresh all");
-        cliExecuteThrow("hagnk all");
-        cliExecuteThrow("breakfast");
       }
-    }, hagnk],
-    completed: () => get$2("ascensionsToday") === 1 && get$2("questL13Final") === "finished"
+    }, hagnk, breakfast],
+    completed: () => get$2("ascensionsToday") === 1 && get$2("questL13Final") === "finished" && breakfastDone()
   }
 };
 
@@ -25978,7 +25997,7 @@ var robot = {
         statusUpdate("looprobotprism", "Breaking robot prism. That took ".concat(results$1.turns, " turns"));
         breakPrism();
       }
-    }, hagnk, liverOfSteel("loopcasual")]
+    }, hagnk, breakfast, liverOfSteel("loopcasual")]
   }
 };
 
@@ -26030,7 +26049,7 @@ var smol = {
       post: () => {
         if (get$2("sweat") < 75) require$$0.abort("Not enough sweat");
       }
-    }, hagnk, {
+    }, hagnk, breakfast, {
       name: "smol sober up (sweat it out)",
       ready: () => require$$0.canInteract() && get$2("_sweatOutSomeBoozeUsed") < 3,
       completed: soberedUp,
@@ -26067,7 +26086,7 @@ var standard = {
       do: () => ascendInto(path, {
         moon: "knoll"
       })
-    }, hagnk]
+    }, hagnk, breakfast]
   }
 };
 
