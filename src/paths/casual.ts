@@ -39,7 +39,7 @@ export const casual: PathDefinition = {
         ready: () => tapped(true) && willAscend(),
         completed: () => questStep("questL13Final") <= 13,
         do: (): void => {
-          statusUpdate("loopsmolstart", "Jumping gash into casual");
+          statusUpdate("loopcasualstart", "Jumping gash into casual");
           ascendInto(path, { moon: "platypus", lifestyle: Lifestyle.casual, permSkills: true });
           visitUrl("main.php");
           while (handlingChoice()) runChoice(1);
@@ -54,12 +54,12 @@ export const casual: PathDefinition = {
           statusUpdate("loopstar", "Starting `loopstar`");
           floristAvailable();
           trackResults(results, () => external("loopstar"));
-          statusUpdate("loopsmolend", "Done with `loopstar`");
+          statusUpdate("loopcasualend", "Done with `loopstar`");
           results.turns = myTurncount();
         },
       },
       {
-        name: "loopsmol prism break",
+        name: "casual prism break",
         completed: () => questStep("questL13Final") > 13,
         do: breakPrism,
       },

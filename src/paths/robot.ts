@@ -28,7 +28,7 @@ export const robot: PathDefinition = {
     name: "robot",
     tasks: [
       {
-        name: "standard gash",
+        name: "robot gash",
         prepare: prepareGash,
         ready: () => tapped(true) && args.ascend,
         completed: () => !canInteract() && inPath(path),

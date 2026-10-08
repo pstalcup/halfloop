@@ -36,7 +36,7 @@ export const smol: PathDefinition = {
   name: "smol",
   path,
   results,
-  describeArgs: () => [`* invoke loopsmol using (${args.loopstar_command})`],
+  describeArgs: () => [`* invoke loopstar using (${args.loopstar_command})`],
   quest: {
     name: "smol",
     tasks: [

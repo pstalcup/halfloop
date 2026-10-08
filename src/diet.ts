@@ -102,13 +102,13 @@ export const diet: Quest<Task> = {
     })),
     {
       name: "buy day shortener",
-      ready: () => BurningLeaves.numberOfLeaves() > 222,
+      ready: () => BurningLeaves.numberOfLeaves() >= 222,
       completed: () => get("_leafDayShortenerCrafted"),
       do: () => cliExecuteThrow("leaves day shortener"),
     },
     {
       name: "buy leaf lasso",
-      ready: () => BurningLeaves.numberOfLeaves() > 69,
+      ready: () => BurningLeaves.numberOfLeaves() >= 69,
       completed: () => get("_leafLassosCrafted", 0) === 3,
       do: () => cliExecuteThrow("leaves lit leaf lasso"),
     },
@@ -134,6 +134,7 @@ export const diet: Quest<Task> = {
     {
       name: "extra time",
       completed: () => get("_extraTimeUsed", 0) > 0,
+      acquire: () => [{ item: $item`extra time` }],
       do: () => use($item`extra time`),
     },
     {
