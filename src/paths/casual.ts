@@ -1,102 +1,68 @@
-import { Quest, Task } from "grimoire-kolmafia";
 import {
-  canInteract,
   floristAvailable,
   handlingChoice,
-  myAscensions,
-  myPath,
   myTurncount,
   print,
   runChoice,
   visitUrl,
 } from "kolmafia";
-import { $item, $path, ascend, get, Lifestyle, prepareAscension, questStep, Session } from "libram";
+import { $path, Lifestyle, questStep } from "libram";
+
+import { args, external, statusUpdate, tapped, willAscend } from "../util";
 
 import {
-  args,
-  ascensionCheck,
-  cliExecuteThrow,
-  external,
-  halfloopValue,
-  skillsToPerm,
-  statusUpdate,
-  tapped,
-  willAscend,
-} from "../util";
+  ascendInto,
+  breakPrism,
+  hagnk,
+  inPath,
+  newResults,
+  PathDefinition,
+  prepareGash,
+  trackResults,
+} from "./lib";
 
-const casualPath = $path.none;
-export let casualMeat = 0;
-export let casualItems = 0;
-export let casualTurns = 0;
+const path = $path.none;
+const results = newResults();
 
-export const casual: Quest<Task> = {
+export const casual: PathDefinition = {
   name: "casual",
-  tasks: [
-    {
-      name: "gash",
-      prepare: (): void => {
-        ascensionCheck();
-        const garden = "packet of rock seeds";
-        const eudora = "Our Daily Candles™ order form";
-        prepareAscension({ garden, eudora });
+  path,
+  results,
+  describeArgs: () => [`* invoke loopstar using (${args.loopstar_command})`],
+  quest: {
+    name: "casual",
+    tasks: [
+      {
+        name: "gash",
+        prepare: prepareGash,
+        ready: () => tapped(true) && willAscend(),
+        completed: () => questStep("questL13Final") <= 13,
+        do: (): void => {
+          statusUpdate("loopsmolstart", "Jumping gash into casual");
+          ascendInto(path, { moon: "platypus", lifestyle: Lifestyle.casual, permSkills: true });
+          visitUrl("main.php");
+          while (handlingChoice()) runChoice(1);
+        },
       },
-      ready: () => tapped(true) && willAscend(),
-      completed: () => questStep("questL13Final") <= 13,
-      do: (): void => {
-        statusUpdate("loopsmolstart", "Jumping gash into smol");
-        ascend({
-          path: casualPath,
-          playerClass: args.class,
-          lifestyle: Lifestyle.casual,
-          moon: "platypus",
-          pet: $item`astral belt`,
-          consumable: $item`astral six-pack`,
-          permOptions: {
-            permSkills: new Map(skillsToPerm().map((s) => [s, Lifestyle.hardcore])),
-            neverAbort: false,
-          },
-        });
-        visitUrl("main.php");
-        while (handlingChoice()) runChoice(1);
+      {
+        name: "loopstar",
+        ready: () => inPath(path),
+        completed: () => questStep("questL13Final") >= 13,
+        do: (): void => {
+          print(`${questStep("questL13Final")}`);
+          statusUpdate("loopstar", "Starting `loopstar`");
+          floristAvailable();
+          trackResults(results, () => external("loopstar"));
+          statusUpdate("loopsmolend", "Done with `loopstar`");
+          results.turns = myTurncount();
+        },
       },
-    },
-    {
-      name: "loopstar",
-      ready: () => myPath() === casualPath,
-      completed: () => questStep("questL13Final") >= 13,
-      do: (): void => {
-        print(`${questStep("questL13Final")}`);
-        statusUpdate("loopstar", "Starting `loopstar`");
-
-        floristAvailable();
-        const start = Session.current();
-        external("loopstar");
-        const end = Session.current();
-
-        const { meat, items } = Session.diff(end, start).value(halfloopValue);
-        casualMeat = meat;
-        casualItems = items;
-
-        statusUpdate("loopsmolend", "Done with `loopsmol`");
-
-        casualTurns = myTurncount();
+      {
+        name: "loopsmol prism break",
+        completed: () => questStep("questL13Final") > 13,
+        do: breakPrism,
       },
-    },
-    {
-      name: "loopsmol prism break",
-      completed: () => questStep("questL13Final") > 13,
-      do: (): void => {
-        visitUrl("place.php?whichplace=nstower&action=ns_11_prism");
-      },
-    },
-    {
-      name: "hagnk",
-      ready: () => canInteract(),
-      completed: () => get("lastEmptiedStorage") === myAscensions(),
-      do: (): void => {
-        cliExecuteThrow("hagnk all");
-      },
-      post: () => cliExecuteThrow("breakfast"),
-    },
-  ],
+      hagnk,
+    ],
+  },
 };

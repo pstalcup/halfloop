@@ -1,16 +1,23 @@
 import { Quest, Task } from "grimoire-kolmafia";
-import { canInteract, myPath } from "kolmafia";
-import { $path, $paths, getRemainingLiver } from "libram";
+import { canInteract, myPath, toPath } from "kolmafia";
+import { getRemainingLiver } from "libram";
 
 import { args, external } from "../util";
 
 import { casual } from "./casual";
 import { cs } from "./cs";
+import { PathDefinition } from "./lib";
 import { robot } from "./robot";
 import { smol } from "./smol";
 import { standard } from "./standard";
 
-const uniquePaths = $paths`Community Service, A Shrunken Adventurer am I`;
+export type { PathDefinition, PathResults } from "./lib";
+
+/** Every path halfloop knows how to run. Add new paths here. */
+export const paths: PathDefinition[] = [cs, smol, robot, standard, casual];
+
+/** Paths that autoscend should never be used to finish */
+const uniquePaths = [cs.path, smol.path];
 
 export const autoscend: Quest<Task> = {
   name: "autoscend",
@@ -24,17 +31,11 @@ export const autoscend: Quest<Task> = {
   ],
 };
 
-export function pathQuest(): Quest<Task> {
-  if (args.path === $path`Community Service`) {
-    return cs;
-  } else if (args.path === $path`A Shrunken Adventurer am I`) {
-    return smol;
-  } else if (args.path === $path`Standard`) {
-    return standard;
-  } else if (args.path === $path`You, Robot`) {
-    return robot;
-  } else if (args.path === $path.none) {
-    return casual;
-  }
-  throw `Unsupported Path ${args.path}`;
+/** The path selected by the `path` arg, given as a short name (e.g. smol) or a full path name */
+export function currentPath(): PathDefinition {
+  const selected =
+    paths.find(({ name }) => name === args.path) ??
+    paths.find(({ path }) => path === toPath(args.path));
+  if (!selected) throw `Unsupported Path ${args.path}`;
+  return selected;
 }
