@@ -1,0 +1,11 @@
+# Scripts halfloop invokes. KoLmafia installs these on `git checkout` / `git update`.
+github loathers/garbage-collector release
+github loathers/keeping-tabs release
+github loathers/autoscend
+github loathers/combo release
+github loathers/chrono-collector release
+github loathers/crimbo release
+github Pantocyclus/PVP_MAB release
+github Kasekopf/loopstar release
+github Kasekopf/looprobot release
+github Astro3207/UnderTheSea main
