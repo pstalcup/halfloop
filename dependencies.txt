@@ -1,6 +1,7 @@
 # Scripts halfloop invokes. KoLmafia installs these on `git checkout` / `git update`.
 github loathers/garbage-collector release
 github loathers/keeping-tabs release
+github soolar/CONSUME.ash
 github loathers/autoscend
 github loathers/combo release
 github loathers/chrono-collector release
