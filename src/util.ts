@@ -166,13 +166,7 @@ type DevExternalScript =
   | "looprobot"
   | "underthesea"
   | "crimbo";
-const externalScripts = [
-  "autoscend",
-  "freecandy",
-  "combo",
-  "chrono",
-  "moustacherider",
-] as const;
+const externalScripts = ["autoscend", "freecandy", "combo", "chrono", "moustacherider"] as const;
 type BuiltExternalScript = (typeof externalScripts)[number];
 
 export type ExternalScript = DevExternalScript | BuiltExternalScript;
