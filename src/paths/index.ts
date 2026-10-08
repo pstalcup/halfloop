@@ -8,16 +8,17 @@ import { casual } from "./casual";
 import { cs } from "./cs";
 import { PathDefinition } from "./lib";
 import { robot } from "./robot";
+import { sea } from "./sea";
 import { smol } from "./smol";
 import { standard } from "./standard";
 
 export type { PathDefinition, PathResults } from "./lib";
 
 /** Every path halfloop knows how to run. Add new paths here. */
-export const paths: PathDefinition[] = [cs, smol, robot, standard, casual];
+export const paths: PathDefinition[] = [cs, smol, robot, sea, standard, casual];
 
 /** Paths that autoscend should never be used to finish */
-const uniquePaths = [cs.path, smol.path];
+const uniquePaths = [cs.path, smol.path, sea.path];
 
 export const autoscend: Quest<Task> = {
   name: "autoscend",

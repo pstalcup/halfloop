@@ -76,6 +76,10 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
     help: "how to invoke looprobot",
     default: "looprobot",
   }),
+  underthesea_command: Args.string({
+    help: "how to invoke UnderTheSea",
+    default: "UnderTheSea",
+  }),
   crimbo_command: Args.string({
     help: "how to invoke crimbo",
     default: "crimbo",
@@ -89,7 +93,7 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
     "CLASS",
   ),
   path: Args.string({
-    help: "What path to run as: cs, smol, robot, standard, casual, or a full path name",
+    help: "What path to run as: cs, smol, robot, sea, standard, casual, or a full path name",
     default: "cs",
   }),
   lifestyle: Args.custom<Lifestyle>(
@@ -160,6 +164,7 @@ type DevExternalScript =
   | "phccs_gash"
   | "loopstar"
   | "looprobot"
+  | "underthesea"
   | "crimbo";
 const externalScripts = [
   "autoscend",
