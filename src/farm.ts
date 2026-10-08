@@ -222,7 +222,7 @@ export const farm: () => Quest<Task> = () => ({
       name: "pajamas",
       ready: () => canInteract() && !willAscend() && args.adventures === 0,
       prepare: (): void => {
-        if (!get("_aug13Cast") || have($effect`Offhand Remarkable`)) {
+        if (!get("_aug13Cast") && !have($effect`Offhand Remarkable`)) {
           useSkill($skill`Aug. 13th: Left/Off Hander's Day!`);
         }
       },

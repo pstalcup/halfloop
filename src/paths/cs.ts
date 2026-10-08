@@ -1,14 +1,7 @@
-import {
-  cliExecute,
-  myAdventures,
-  myTurncount,
-  putCloset,
-  pvpAttacksLeft,
-  takeCloset,
-} from "kolmafia";
+import { cliExecute, myTurncount, putCloset, takeCloset } from "kolmafia";
 import { $item, $path, get, Lifestyle } from "libram";
 
-import { args, external, tapped } from "../util";
+import { args, ascensionCheck, external, tapped } from "../util";
 
 import { breakfast, breakfastDone, hagnk, newResults, PathDefinition, trackResults } from "./lib";
 
@@ -27,11 +20,7 @@ export const cs: PathDefinition = {
     tasks: [
       {
         name: "phccs_gash",
-        prepare: (): void => {
-          if (myAdventures() > 0 || pvpAttacksLeft() > 0) {
-            throw `You shouldn't be ascending with ${myAdventures()} adventures and ${pvpAttacksLeft()} fites left!`;
-          }
-        },
+        prepare: ascensionCheck,
         ready: () => tapped(true) && args.ascend,
         completed: () => get("ascensionsToday") > 0,
         do: () =>
