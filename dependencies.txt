@@ -5,6 +5,7 @@ github soolar/CONSUME.ash
 github spaghetti-squash/phccs release
 github loathers/autoscend
 github loathers/combo release
+github loathers/freecandydotexe release
 github loathers/chrono-collector release
 github loathers/crimbo release
 github Pantocyclus/PVP_MAB release
