@@ -103,16 +103,20 @@ export const hagnk: Task = {
  */
 const BREAKFAST_PROPERTY = "_halfloopBreakfast";
 
-export function runBreakfast(): void {
+function runBreakfast(): void {
   cliExecuteThrow("breakfast");
   set(BREAKFAST_PROPERTY, myAscensions());
+}
+
+export function breakfastDone(): boolean {
+  return get(BREAKFAST_PROPERTY, -1) === myAscensions();
 }
 
 /** Breakfast once per day per ascension, after the king is freed so aftercore settings apply */
 export const breakfast: Task = {
   name: "breakfast",
   ready: () => canInteract(),
-  completed: () => get(BREAKFAST_PROPERTY, -1) === myAscensions(),
+  completed: breakfastDone,
   do: runBreakfast,
 };
 
