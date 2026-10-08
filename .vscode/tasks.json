@@ -10,7 +10,7 @@
       },
       "problemMatcher": [],
       "label": "npm: build",
-      "detail": "yarn run build:types && yarn run build:js"
+      "detail": "rollup -c rollup.config.ts --configPlugin @rollup/plugin-typescript"
     },
     {
       "type": "npm",
