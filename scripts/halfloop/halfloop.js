@@ -26199,7 +26199,13 @@ var pvp = {
       while (get$2("_meteoriteAdesUsed") < 3 && have$1c($item(_templateObject3 || (_templateObject3 = _taggedTemplateLiteral(["Meteorite-Ade"]))))) {
         require$$0.use($item(_templateObject4 || (_templateObject4 = _taggedTemplateLiteral(["Meteorite-Ade"]))));
       }
-      require$$0.cliExecute("PVP_MAB");
+      // pvp_mab returns normally when it gives up early (e.g. "Could not find anyone to fight!"),
+      // so without this check the engine would pick swagger again forever.
+      var fitesBefore = require$$0.pvpAttacksLeft();
+      if (!require$$0.cliExecute("pvp_mab")) throw "pvp_mab failed to run. Is it installed?";
+      if (require$$0.pvpAttacksLeft() > 0 && require$$0.pvpAttacksLeft() >= fitesBefore) {
+        throw "pvp_mab stopped with ".concat(require$$0.pvpAttacksLeft(), " fites left without using any. Check its output above.");
+      }
     }
   }]
 };
