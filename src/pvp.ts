@@ -33,7 +33,13 @@ export const pvp: Quest<Task> = {
         while (get("_meteoriteAdesUsed") < 3 && have($item`Meteorite-Ade`)) {
           use($item`Meteorite-Ade`);
         }
-        cliExecute("PVP_MAB");
+        // PVP_MAB returns normally when it gives up early (e.g. "Could not find anyone to fight!"),
+        // so without this check the engine would pick swagger again forever.
+        const fitesBefore = pvpAttacksLeft();
+        if (!cliExecute("PVP_MAB")) throw "PVP_MAB failed to run. Is it installed?";
+        if (pvpAttacksLeft() > 0 && pvpAttacksLeft() >= fitesBefore) {
+          throw `PVP_MAB stopped with ${pvpAttacksLeft()} fites left without using any. Check its output above.`;
+        }
       },
     },
   ],
