@@ -112,6 +112,10 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
     (v) => (v === "pvp" ? "pvp" : "adventures"),
     "MAXIMIZE",
   ),
+  ntfy: Args.string({
+    help: "ntfy.sh topic (or full ntfy server URL) to send a notification to when the run finishes or fails",
+    default: "",
+  }),
   // different modes
   list: Args.flag({ help: "list all tasks and then exit" }),
   args: Args.flag({ help: "print out a message showing what args will be used" }),

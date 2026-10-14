@@ -11,6 +11,7 @@ import { $item, clamp, Clan, get, have, sumNumbers } from "libram";
 
 import { diet } from "./diet";
 import { farm } from "./farm";
+import { notify } from "./notify";
 import { autoscend, currentPath, PathDefinition, PathResults, paths } from "./paths";
 import { pvp } from "./pvp";
 import { args, currentArgs, daily, fmt, halloween, statusUpdate } from "./util";
@@ -104,8 +105,12 @@ export function main(command = ""): void {
 
   if (args.sleep) wait(5);
 
+  let error: unknown = undefined;
   try {
     engine.run();
+  } catch (e) {
+    error = e;
+    throw e;
   } finally {
     engine.destruct();
     engine.printTurns();
@@ -159,7 +164,9 @@ export function main(command = ""): void {
     const results = (meat: number, items: number) =>
       `${fmt(meat)} meat + ${fmt(items)} items = ${fmt(meat + items)}`;
 
+    const summary: string[] = [];
     const resultMessage = (title: string, message: string, color = "black") => {
+      summary.push(`${title}: ${message}`);
       statusUpdate(`r${title.replace(" ", "").toLowerCase()}`, `${title} ${message}`);
       print(`* ${title}: ${message}`, color);
     };
@@ -179,5 +186,15 @@ export function main(command = ""): void {
     resultMessage("Turns Tomorrow", `${turns} (after potato and hourglass)`);
     resultMessage("Fights Tomorrow", `${rolloverFites()}`);
     resultMessage("Lost Turns", `${lostTurns} to rollover`);
+
+    if (error === undefined) {
+      notify(summary.join("\n"), { title: "Halfloop finished", tags: ["white_check_mark"] });
+    } else {
+      notify(`${error}\n\n${summary.join("\n")}`, {
+        title: "Halfloop aborted",
+        tags: ["rotating_light"],
+        priority: 5,
+      });
+    }
   }
 }
