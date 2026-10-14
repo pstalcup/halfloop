@@ -29,3 +29,13 @@ yarn run watch
 ```
 
 Run `yarn run format` before committing.
+
+## Notifications
+
+Halfloop can send a push notification through [ntfy](https://ntfy.sh) when a run finishes or aborts. Subscribe to a topic in the ntfy app, then pass it as an arg:
+
+```
+halfloop ntfy=my-secret-topic
+```
+
+Use a hard-to-guess topic name, since anyone who knows it can read your notifications. For a self-hosted server, pass the full URL instead (`ntfy=https://ntfy.example.com/my-topic`). Without `ntfy`, no notifications are sent.
