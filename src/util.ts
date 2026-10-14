@@ -14,6 +14,7 @@ import {
   myFamiliar,
   myInebriety,
   mySpleenUse,
+  numericModifier,
   pvpAttacksLeft,
   runCombat,
   setAutoAttack,
@@ -24,7 +25,7 @@ import {
   visitUrl,
   writeCcs,
 } from "kolmafia";
-import { $class, $familiar, get, have, Lifestyle, set, StrictMacro } from "libram";
+import { $class, $familiar, $item, clamp, get, have, Lifestyle, set, StrictMacro } from "libram";
 
 const lifestyleShortcuts = new Map([
   ["hardcore", Lifestyle.hardcore],
@@ -142,6 +143,31 @@ export function currentArgs(pathArgs: string[]): string[] {
 
 export function cliExecuteThrow(command: string): void {
   if (!cliExecute(command)) throw `Failed to execute ${command}`;
+}
+
+const ROLLOVER_ADVENTURE_CAP = 200;
+
+// Every character gets 40 adventures at rollover. Everything else (gear, resolutions, Wild Hare,
+// Squamous Gibberer, borrowed time, ...) is already part of mafia's Adventures modifier.
+const BASE_ROLLOVER_ADVENTURES = 40;
+
+/**
+ * How large an Adventures modifier you can wear to bed before rollover adventures overflow the cap.
+ */
+export function rolloverAdventureHeadroom(): number {
+  return Math.max(0, ROLLOVER_ADVENTURE_CAP - myAdventures() - BASE_ROLLOVER_ADVENTURES);
+}
+
+/**
+ * @returns [adventures you will start tomorrow with, adventures lost to the rollover cap]
+ */
+export function rolloverTurns(): [number, number] {
+  const base = myAdventures() + numericModifier("Adventures") + BASE_ROLLOVER_ADVENTURES;
+  const kept = clamp(base, 0, ROLLOVER_ADVENTURE_CAP);
+  return [
+    kept + (have($item`potato alarm clock`) ? 5 : 0) + (have($item`etched hourglass`) ? 5 : 0),
+    base - kept,
+  ];
 }
 
 export function tapped(ascend: boolean): boolean {
