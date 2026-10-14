@@ -147,26 +147,22 @@ export function cliExecuteThrow(command: string): void {
 
 const ROLLOVER_ADVENTURE_CAP = 200;
 
-/**
- * Adventures you will gain at rollover that don't come from your gear's Adventures modifier.
- * These all count towards the rollover cap.
- */
-function rolloverBonusAdventures(): number {
-  return 40 + clamp(2 * get("_resolutionAdv"), 0, 10) + get("_gibbererAdv") + get("_hareAdv");
-}
+// Every character gets 40 adventures at rollover. Everything else (gear, resolutions, Wild Hare,
+// Squamous Gibberer, borrowed time, ...) is already part of mafia's Adventures modifier.
+const BASE_ROLLOVER_ADVENTURES = 40;
 
 /**
  * How large an Adventures modifier you can wear to bed before rollover adventures overflow the cap.
  */
 export function rolloverAdventureHeadroom(): number {
-  return Math.max(0, ROLLOVER_ADVENTURE_CAP - myAdventures() - rolloverBonusAdventures());
+  return Math.max(0, ROLLOVER_ADVENTURE_CAP - myAdventures() - BASE_ROLLOVER_ADVENTURES);
 }
 
 /**
  * @returns [adventures you will start tomorrow with, adventures lost to the rollover cap]
  */
 export function rolloverTurns(): [number, number] {
-  const base = myAdventures() + numericModifier("Adventures") + rolloverBonusAdventures();
+  const base = myAdventures() + numericModifier("Adventures") + BASE_ROLLOVER_ADVENTURES;
   const kept = clamp(base, 0, ROLLOVER_ADVENTURE_CAP);
   return [
     kept + (have($item`potato alarm clock`) ? 5 : 0) + (have($item`etched hourglass`) ? 5 : 0),
