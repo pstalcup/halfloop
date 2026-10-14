@@ -1,20 +1,13 @@
 import { Args, Engine, getTasks, Task } from "grimoire-kolmafia";
-import {
-  myAdventures,
-  numericModifier,
-  print,
-  pvpAttacksLeft,
-  totalTurnsPlayed,
-  wait,
-} from "kolmafia";
-import { $item, clamp, Clan, get, have, sumNumbers } from "libram";
+import { numericModifier, print, pvpAttacksLeft, totalTurnsPlayed, wait } from "kolmafia";
+import { Clan, get, sumNumbers } from "libram";
 
 import { diet } from "./diet";
 import { farm } from "./farm";
 import { notify } from "./notify";
 import { autoscend, currentPath, PathDefinition, PathResults, paths } from "./paths";
 import { pvp } from "./pvp";
-import { args, currentArgs, daily, fmt, halloween, statusUpdate } from "./util";
+import { args, currentArgs, daily, fmt, halloween, rolloverTurns, statusUpdate } from "./util";
 
 class HalfloopEngine extends Engine {
   turns: Map<string, number[]> = new Map();
@@ -32,23 +25,6 @@ class HalfloopEngine extends Engine {
       print(`- ${name}: ${turns.reduce((a, b) => a + b)} (${turns})`);
     }
   }
-}
-
-function rolloverTurns() {
-  const base =
-    myAdventures() +
-    40 +
-    numericModifier("Adventures") +
-    clamp(2 * get("_resolutionAdv"), 0, 10) +
-    get("_gibbererAdv") +
-    get("_hareAdv");
-
-  return [
-    clamp(base, 0, 200) +
-      (have($item`potato alarm clock`) ? 5 : 0) +
-      (have($item`etched hourglass`) ? 5 : 0),
-    base - clamp(base, 0, 200),
-  ];
 }
 
 function rolloverFites() {

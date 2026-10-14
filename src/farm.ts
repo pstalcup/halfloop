@@ -11,7 +11,6 @@ import {
   mallPrice,
   myAdventures,
   myClass,
-  numericModifier,
   repriceShop,
   runChoice,
   shopPrice,
@@ -44,6 +43,7 @@ import {
   ExternalScript,
   halloween,
   mode,
+  rolloverAdventureHeadroom,
   ScriptArg,
   statusUpdate,
   tapped,
@@ -226,15 +226,21 @@ export const farm: () => Quest<Task> = () => ({
           useSkill($skill`Aug. 13th: Left/Off Hander's Day!`);
         }
       },
-      completed: () =>
-        numericModifier(args.maximize === "adventures" ? "Adventures" : "PvP Fights") > 50,
+      completed: () => get("_halfloopPajamas", false),
       do: (): void => {
-        const maxTarget = args.maximize === "adventures" ? "+adv" : "+fites";
-        const maxClan =
-          args.maximize === "adventures" ? "Bonus Adventures from Hell" : "Alliance from Heck";
-        Clan.join(maxClan);
-        cliExecuteThrow(`maximize ${maxTarget} +switch left`);
+        if (args.maximize === "adventures") {
+          // Adventures past the rollover cap are wasted, so only wear as much +adv as still fits
+          // and spend the rest of the outfit on PvP fights.
+          Clan.join("Bonus Adventures from Hell");
+          cliExecuteThrow(
+            `maximize 10 adv ${rolloverAdventureHeadroom()} max, fites, +switch left`,
+          );
+        } else {
+          Clan.join("Alliance from Heck");
+          cliExecuteThrow("maximize +fites +switch left");
+        }
       },
+      post: () => set("_halfloopPajamas", true),
     },
     {
       name: "keeping-tabs",
