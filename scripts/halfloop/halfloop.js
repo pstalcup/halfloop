@@ -25325,6 +25325,10 @@ var args = Args.create("halfloop", "Loop your brains out (on live tv)", {
     help: "Maximize for PvP fights or Adventrues on roll",
     default: "adventures"
   }, v => v === "pvp" ? "pvp" : "adventures", "MAXIMIZE"),
+  ntfy: Args.string({
+    help: "ntfy.sh topic (or full ntfy server URL) to send a notification to when the run finishes or fails",
+    default: ""
+  }),
   // different modes
   list: Args.flag({
     help: "list all tasks and then exit"
@@ -25787,6 +25791,38 @@ var farm = () => ({
     }
   }])
 });
+
+function ntfyUrl(topic) {
+  // Accept either a bare topic (published to ntfy.sh) or a full URL for a self-hosted server
+  var base = /^https?:\/\//.test(topic) ? topic : "https://ntfy.sh/".concat(topic);
+  return "".concat(base.replace(/\/+$/, ""), "/publish");
+}
+
+/**
+ * Send a push notification through ntfy (https://ntfy.sh) if the ntfy arg is set.
+ * Uses ntfy's GET publish endpoint since KoLmafia form-encodes POST bodies.
+ * Never throws: a failed notification should not take down the run.
+ */
+function notify(message, _ref) {
+  var title = _ref.title,
+    _ref$tags = _ref.tags,
+    tags = _ref$tags === void 0 ? [] : _ref$tags,
+    _ref$priority = _ref.priority,
+    priority = _ref$priority === void 0 ? 3 : _ref$priority;
+  if (!args.ntfy) return;
+  var params = [["message", message], ["title", title], ["priority", "".concat(priority)]].concat(_toConsumableArray(tags.length > 0 ? [["tags", tags.join(",")]] : []));
+  var query = params.map(_ref2 => {
+    var _ref3 = _slicedToArray(_ref2, 2),
+      key = _ref3[0],
+      value = _ref3[1];
+    return "".concat(key, "=").concat(encodeURIComponent(value));
+  }).join("&");
+  try {
+    require$$0.visitUrl("".concat(ntfyUrl(args.ntfy), "?").concat(query), false, true);
+  } catch (e) {
+    require$$0.print("Failed to send ntfy notification: ".concat(e), "red");
+  }
+}
 
 var _templateObject$7, _templateObject2$4, _templateObject3$3;
 function newResults() {
@@ -26306,8 +26342,12 @@ function main() {
   runArgs.forEach(a => require$$0.print(a));
   if (args.args) return;
   if (args.sleep) require$$0.wait(5);
+  var error = undefined;
   try {
     engine.run();
+  } catch (e) {
+    error = e;
+    throw e;
   } finally {
     engine.destruct();
     engine.printTurns();
@@ -26361,8 +26401,10 @@ function main() {
       return items;
     }))));
     var results = (meat, items) => "".concat(fmt(meat), " meat + ").concat(fmt(items), " items = ").concat(fmt(meat + items));
+    var summary = [];
     var resultMessage = function resultMessage(title, message) {
       var color = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : "black";
+      summary.push("".concat(title, ": ").concat(message));
       statusUpdate("r".concat(title.replace(" ", "").toLowerCase()), "".concat(title, " ").concat(message));
       require$$0.print("* ".concat(title, ": ").concat(message), color);
     };
@@ -26380,6 +26422,18 @@ function main() {
     resultMessage("Turns Tomorrow", "".concat(turns, " (after potato and hourglass)"));
     resultMessage("Fights Tomorrow", "".concat(rolloverFites()));
     resultMessage("Lost Turns", "".concat(lostTurns, " to rollover"));
+    if (error === undefined) {
+      notify(summary.join("\n"), {
+        title: "Halfloop finished",
+        tags: ["white_check_mark"]
+      });
+    } else {
+      notify("".concat(error, "\n\n").concat(summary.join("\n")), {
+        title: "Halfloop aborted",
+        tags: ["rotating_light"],
+        priority: 5
+      });
+    }
   }
 }
 
