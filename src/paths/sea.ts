@@ -1,5 +1,15 @@
-import { canInteract, handlingChoice, myTurncount, runChoice, visitUrl } from "kolmafia";
-import { $path, get } from "libram";
+import {
+  canInteract,
+  equip,
+  equippedItem,
+  handlingChoice,
+  itemAmount,
+  myTurncount,
+  retrieveItem,
+  runChoice,
+  visitUrl,
+} from "kolmafia";
+import { $item, $path, EternityCodpiece, get } from "libram";
 
 import { args, external, statusUpdate, tapped, willAscend } from "../util";
 
@@ -23,6 +33,29 @@ const results = newResults();
  */
 const seaceressDefeated = () => get("questL13Final") === "finished";
 
+const pearl = $item`unblemished pearl`;
+
+/**
+ * Gems stay in the Eternity Codpiece through ascension, so loading it with unblemished pearls
+ * (+1 adventure each) before jumping smuggles five extra adventures a day into the sea.
+ */
+function loadCodpiecePearls(): void {
+  if (!EternityCodpiece.have()) return;
+  const emptySlots = EternityCodpiece.SLOTS.filter((slot) => equippedItem(slot) !== pearl);
+  if (emptySlots.length === 0) return;
+  if (!retrieveItem(pearl, emptySlots.length)) {
+    throw `Couldn't get ${emptySlots.length} ${pearl} for the codpiece (have ${itemAmount(pearl)})`;
+  }
+  for (const slot of emptySlots) {
+    if (!equip(slot, pearl)) throw `Failed to put ${pearl} in ${slot}`;
+  }
+}
+
+function prepareSeaGash(): void {
+  prepareGash();
+  loadCodpiecePearls();
+}
+
 export const sea: PathDefinition = {
   name: "sea",
   path,
@@ -33,7 +66,7 @@ export const sea: PathDefinition = {
     tasks: [
       {
         name: "sea gash",
-        prepare: prepareGash,
+        prepare: prepareSeaGash,
         ready: () => tapped(true) && willAscend(),
         completed: () => !canInteract() && inPath(path),
         do: (): void => {
