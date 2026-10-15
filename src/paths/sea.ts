@@ -1,11 +1,11 @@
 import {
+  buy,
   canInteract,
   equip,
   equippedItem,
   handlingChoice,
   itemAmount,
   myTurncount,
-  retrieveItem,
   runChoice,
   visitUrl,
 } from "kolmafia";
@@ -37,14 +37,19 @@ const pearl = $item`unblemished pearl`;
 
 /**
  * Gems stay in the Eternity Codpiece through ascension, so loading it with unblemished pearls
- * (+1 adventure each) before jumping smuggles five extra adventures a day into the sea.
+ * (+1 adventure each) before jumping smuggles five extra adventures a day into the sea. The sea
+ * path uses the pearls up, so every jump restocks whatever slots are empty from the mall.
  */
 function loadCodpiecePearls(): void {
   if (!EternityCodpiece.have()) return;
+  // Mafia parses the codpiece page, so this picks up pearls the last run consumed
+  visitUrl("inventory.php?action=docodpiece");
   const emptySlots = EternityCodpiece.SLOTS.filter((slot) => equippedItem(slot) !== pearl);
   if (emptySlots.length === 0) return;
-  if (!retrieveItem(pearl, emptySlots.length)) {
-    throw `Couldn't get ${emptySlots.length} ${pearl} for the codpiece (have ${itemAmount(pearl)})`;
+  const toBuy = emptySlots.length - itemAmount(pearl);
+  if (toBuy > 0) buy(pearl, toBuy, args.pearl_price);
+  if (itemAmount(pearl) < emptySlots.length) {
+    throw `Couldn't buy ${emptySlots.length} ${pearl} at ${args.pearl_price} meat or less (have ${itemAmount(pearl)})`;
   }
   for (const slot of emptySlots) {
     if (!equip(slot, pearl)) throw `Failed to put ${pearl} in ${slot}`;
@@ -60,7 +65,10 @@ export const sea: PathDefinition = {
   name: "sea",
   path,
   results,
-  describeArgs: () => [`* invoke UnderTheSea using (${args.underthesea_command})`],
+  describeArgs: () => [
+    `* invoke UnderTheSea using (${args.underthesea_command})`,
+    `* restock codpiece pearls at up to (${args.pearl_price}) meat each`,
+  ],
   quest: {
     name: "sea",
     tasks: [
