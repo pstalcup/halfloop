@@ -145,8 +145,13 @@ export function currentArgs(pathArgs: string[]): string[] {
   ];
 }
 
+/** Scripts that throw record why in _lastScriptError; pass that cause on. */
 export function cliExecuteThrow(command: string): void {
-  if (!cliExecute(command)) throw `Failed to execute ${command}`;
+  set("_lastScriptError", "");
+  if (!cliExecute(command)) {
+    const cause = get("_lastScriptError");
+    throw `Failed to execute ${command}${cause ? `: ${cause}` : ""}`;
+  }
 }
 
 const ROLLOVER_ADVENTURE_CAP = 200;
