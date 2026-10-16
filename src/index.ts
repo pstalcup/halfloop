@@ -82,8 +82,12 @@ export function main(command = ""): void {
   if (args.sleep) wait(5);
 
   let error: unknown = undefined;
+  // abort() throws mafia's AbortException, which skips catch but still runs
+  // finally, so success means reaching the end, not "nothing was caught".
+  let finished = false;
   try {
     engine.run();
+    finished = true;
   } catch (e) {
     error = e;
     throw e;
@@ -163,10 +167,10 @@ export function main(command = ""): void {
     resultMessage("Fights Tomorrow", `${rolloverFites()}`);
     resultMessage("Lost Turns", `${lostTurns} to rollover`);
 
-    if (error === undefined) {
+    if (finished) {
       notify(summary.join("\n"), { title: "Halfloop finished", tags: ["white_check_mark"] });
     } else {
-      notify(`${error}\n\n${summary.join("\n")}`, {
+      notify(`${error ?? "aborted (see mafia console)"}\n\n${summary.join("\n")}`, {
         title: "Halfloop aborted",
         tags: ["rotating_light"],
         priority: 5,
