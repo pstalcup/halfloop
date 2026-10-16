@@ -81,6 +81,10 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
     help: "how to invoke UnderTheSea",
     default: "UnderTheSea",
   }),
+  pearl_price: Args.number({
+    help: "The most to pay for each unblemished pearl when restocking the codpiece for the sea",
+    default: 200_000,
+  }),
   crimbo_command: Args.string({
     help: "how to invoke crimbo",
     default: "crimbo",
