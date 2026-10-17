@@ -77,9 +77,9 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
     help: "how to invoke looprobot",
     default: "looprobot",
   }),
-  underthesea_command: Args.string({
-    help: "how to invoke UnderTheSea",
-    default: "UnderTheSea",
+  sebastian_command: Args.string({
+    help: "how to invoke sebastian",
+    default: "sebastian",
   }),
   pearl_price: Args.number({
     help: "The most to pay for each unblemished pearl when restocking the codpiece for the sea",
@@ -198,7 +198,7 @@ type DevExternalScript =
   | "phccs_gash"
   | "loopstar"
   | "looprobot"
-  | "underthesea"
+  | "sebastian"
   | "crimbo";
 const externalScripts = ["autoscend", "freecandy", "combo", "chrono", "moustacherider"] as const;
 type BuiltExternalScript = (typeof externalScripts)[number];
