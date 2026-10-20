@@ -25301,9 +25301,9 @@ var args = Args.create("halfloop", "Loop your brains out (on live tv)", {
     help: "how to invoke looprobot",
     default: "looprobot"
   }),
-  underthesea_command: Args.string({
-    help: "how to invoke UnderTheSea",
-    default: "UnderTheSea"
+  sebastian_command: Args.string({
+    help: "how to invoke sebastian",
+    default: "sebastian"
   }),
   pearl_price: Args.number({
     help: "The most to pay for each unblemished pearl when restocking the codpiece for the sea",
@@ -26119,7 +26119,7 @@ var sea = {
   name: "sea",
   path: path$2,
   results: results$1,
-  describeArgs: () => ["* invoke UnderTheSea using (".concat(args.underthesea_command, ")"), "* restock codpiece pearls at up to (".concat(args.pearl_price, ") meat each")],
+  describeArgs: () => ["* invoke sebastian using (".concat(args.sebastian_command, ")"), "* restock codpiece pearls at up to (".concat(args.pearl_price, ") meat each")],
   quest: {
     name: "sea",
     tasks: [{
@@ -26132,21 +26132,21 @@ var sea = {
         ascendInto(path$2, {
           moon: "platypus"
         });
-        // UnderTheSea can get stuck on the intro noncombat, so clear it here
+        // sebastian can get stuck on the intro noncombat, so clear it here
         require$$0.visitUrl("main.php");
         while (require$$0.handlingChoice()) require$$0.runChoice(1);
       }
     }, {
-      name: "UnderTheSea",
-      // Only in the path: run in aftercore, UnderTheSea starts an aftercore sea quest instead
+      name: "sebastian",
+      // Only in the path: run in aftercore, sebastian starts an aftercore sea quest instead
       ready: () => inPath(path$2),
       completed: () => require$$0.canInteract() || seaceressDefeated(),
       do: () => {
-        statusUpdate("loopseastart", "Starting `UnderTheSea`");
-        trackResults(results$1, () => external("underthesea"));
-        // UnderTheSea frees the king itself, so this is usually the only place to count turns
+        statusUpdate("loopseastart", "Starting `sebastian`");
+        trackResults(results$1, () => external("sebastian"));
+        // sebastian frees the king itself, so this is usually the only place to count turns
         results$1.turns = require$$0.myTurncount();
-        statusUpdate("loopseaend", "Done with `UnderTheSea`");
+        statusUpdate("loopseaend", "Done with `sebastian`");
       }
     }, {
       name: "sea free king",
