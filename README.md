@@ -48,4 +48,4 @@ Halfloop installs a relay script. In the KoLmafia relay browser, pick `halfloop`
 - current stats: path, turns, adventures, organs, fights, swagger, today's halfloop and garbo results so far, and a rollover forecast
 - a settings form for every halfloop arg. Saved values become the new defaults, and anything passed on the command line still overrides them.
 
-The page refreshes itself every minute while a run is in progress.
+While a run is in progress, the page refreshes itself every minute and shows an **Interrupt halfloop** button. It works like garbo's: garbo stops at its next task, and halfloop stops before starting its next step. Other loop scripts (phccs, loopstar, sebastian, ...) aren't interrupted, so halfloop stops once the current one finishes.

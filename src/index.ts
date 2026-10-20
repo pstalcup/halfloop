@@ -7,7 +7,7 @@ import { farm } from "./farm";
 import { notify } from "./notify";
 import { autoscend, currentPath, PathDefinition, PathResults, paths } from "./paths";
 import { pvp } from "./pvp";
-import { recordRun, ResultLine } from "./run";
+import { checkInterrupt, clearInterrupt, recordRun, ResultLine } from "./run";
 import {
   args,
   currentArgs,
@@ -23,6 +23,7 @@ class HalfloopEngine extends Engine {
   turns: Map<string, number[]> = new Map();
 
   execute(task: Task<never>): void {
+    checkInterrupt();
     const startingTurns = totalTurnsPlayed();
     super.execute(task);
     const oldTurns = this.turns.get(task.name);
@@ -88,6 +89,7 @@ export function main(command = ""): void {
   if (args.sleep) wait(5);
 
   const startedAt = Date.now();
+  clearInterrupt();
   recordRun({ state: "running", path: path.name, startedAt, results: [] });
 
   let error: unknown = undefined;

@@ -1,5 +1,5 @@
 import { getProperty } from "kolmafia";
-import { set } from "libram";
+import { get, set } from "libram";
 
 export type ResultLine = { title: string; message: string };
 
@@ -28,5 +28,27 @@ export function lastRun(): RunRecord | undefined {
     return JSON.parse(value) as RunRecord;
   } catch {
     return undefined;
+  }
+}
+
+const INTERRUPT_PROPERTY = "halfloop_interrupt";
+
+/** Ask a running halfloop to stop. Garbo is asked too, since it is usually what is running */
+export function requestInterrupt(): void {
+  set(INTERRUPT_PROPERTY, true);
+  set("garbo_interrupt", true);
+}
+
+/** Forget interrupts left over from a run that ended before it saw them */
+export function clearInterrupt(): void {
+  set(INTERRUPT_PROPERTY, false);
+  set("garbo_interrupt", false);
+}
+
+/** Stop the run if the relay page asked us to */
+export function checkInterrupt(): void {
+  if (get(INTERRUPT_PROPERTY, false)) {
+    clearInterrupt();
+    throw "User interrupt requested. Stopping halfloop.";
   }
 }

@@ -21,7 +21,7 @@ import {
 import { get, set } from "libram";
 
 import { paths } from "./paths";
-import { lastRun, RunRecord } from "./run";
+import { lastRun, requestInterrupt, RunRecord } from "./run";
 import {
   args,
   fmt,
@@ -164,11 +164,17 @@ function runSection(run: RunRecord | undefined): string {
   ];
   if (run.error) status.push(["Error", run.error]);
 
+  // A loop script other than garbo only notices the interrupt once it hands control back
+  const interrupt =
+    run.state === "running"
+      ? `<form method="post"><button type="submit" name="interrupt" value="1" class="interrupt">Interrupt halfloop</button></form>`
+      : "";
+
   const results =
     run.results.length > 0
       ? `<h3>Results</h3>${table(run.results.map(({ title, message }) => [title, message]))}`
       : "";
-  return section("Today's run", table(status) + results);
+  return section("Today's run", table(status) + interrupt + results);
 }
 
 function liveStats(): string {
@@ -237,10 +243,19 @@ td { padding: 3px 12px 3px 0; vertical-align: top; }
 .help { color: #777; }
 .notice { background: #eef6ee; border: 1px solid #9c9; padding: 6px 10px; margin-bottom: 12px; }
 button { margin-top: 8px; }
+.interrupt { background: #c33; color: white; border: none; padding: 6px 14px; font-weight: bold; cursor: pointer; }
 `;
 
+function handleInterrupt(): string[] {
+  if (formFields().interrupt === undefined) return [];
+  requestInterrupt();
+  return [
+    "Interrupt requested. Garbo stops at its next task; halfloop stops before its next step.",
+  ];
+}
+
 export function main(): void {
-  const messages = saveSettings();
+  const messages = [...handleInterrupt(), ...saveSettings()];
   const run = lastRun();
 
   const notices = messages.map((message) => `<div class="notice">${escapeHtml(message)}</div>`);
