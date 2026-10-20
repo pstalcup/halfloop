@@ -27,7 +27,7 @@ import {
 } from "kolmafia";
 import { $class, $familiar, $item, clamp, get, have, Lifestyle, set, StrictMacro } from "libram";
 
-const lifestyleShortcuts = new Map([
+export const lifestyleShortcuts = new Map([
   ["hardcore", Lifestyle.hardcore],
   ["softcore", Lifestyle.softcore],
   ["casual", Lifestyle.casual],
@@ -172,6 +172,10 @@ export function rolloverTurns(): [number, number] {
     kept + (have($item`potato alarm clock`) ? 5 : 0) + (have($item`etched hourglass`) ? 5 : 0),
     base - kept,
   ];
+}
+
+export function rolloverFights(): number {
+  return pvpAttacksLeft() + 10 + numericModifier("PvP Fights");
 }
 
 export function tapped(ascend: boolean): boolean {

@@ -1,5 +1,5 @@
 import { Args, Engine, getTasks, Task } from "grimoire-kolmafia";
-import { numericModifier, print, pvpAttacksLeft, totalTurnsPlayed, wait } from "kolmafia";
+import { print, totalTurnsPlayed, wait } from "kolmafia";
 import { Clan, get, sumNumbers } from "libram";
 
 import { diet } from "./diet";
@@ -7,7 +7,17 @@ import { farm } from "./farm";
 import { notify } from "./notify";
 import { autoscend, currentPath, PathDefinition, PathResults, paths } from "./paths";
 import { pvp } from "./pvp";
-import { args, currentArgs, daily, fmt, halloween, rolloverTurns, statusUpdate } from "./util";
+import { recordRun, ResultLine } from "./run";
+import {
+  args,
+  currentArgs,
+  daily,
+  fmt,
+  halloween,
+  rolloverFights,
+  rolloverTurns,
+  statusUpdate,
+} from "./util";
 
 class HalfloopEngine extends Engine {
   turns: Map<string, number[]> = new Map();
@@ -25,10 +35,6 @@ class HalfloopEngine extends Engine {
       print(`- ${name}: ${turns.reduce((a, b) => a + b)} (${turns})`);
     }
   }
-}
-
-function rolloverFites() {
-  return pvpAttacksLeft() + 10 + numericModifier("PvP Fights");
 }
 
 export function main(command = ""): void {
@@ -80,6 +86,9 @@ export function main(command = ""): void {
   if (args.args) return;
 
   if (args.sleep) wait(5);
+
+  const startedAt = Date.now();
+  recordRun({ state: "running", path: path.name, startedAt, results: [] });
 
   let error: unknown = undefined;
   try {
@@ -141,8 +150,10 @@ export function main(command = ""): void {
       `${fmt(meat)} meat + ${fmt(items)} items = ${fmt(meat + items)}`;
 
     const summary: string[] = [];
+    const resultLines: ResultLine[] = [];
     const resultMessage = (title: string, message: string, color = "black") => {
       summary.push(`${title}: ${message}`);
+      resultLines.push({ title, message });
       statusUpdate(`r${title.replace(" ", "").toLowerCase()}`, `${title} ${message}`);
       print(`* ${title}: ${message}`, color);
     };
@@ -160,8 +171,17 @@ export function main(command = ""): void {
     resultMessage("Overall Results", `${results(meat, items)}`);
     resultMessage("Swagger", `${fmt(totalSwagger)}`);
     resultMessage("Turns Tomorrow", `${turns} (after potato and hourglass)`);
-    resultMessage("Fights Tomorrow", `${rolloverFites()}`);
+    resultMessage("Fights Tomorrow", `${rolloverFights()}`);
     resultMessage("Lost Turns", `${lostTurns} to rollover`);
+
+    recordRun({
+      state: error === undefined ? "finished" : "aborted",
+      path: path.name,
+      startedAt,
+      finishedAt: Date.now(),
+      results: resultLines,
+      ...(error === undefined ? {} : { error: `${error}` }),
+    });
 
     if (error === undefined) {
       notify(summary.join("\n"), { title: "Halfloop finished", tags: ["white_check_mark"] });
