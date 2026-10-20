@@ -66,7 +66,7 @@ export const sea: PathDefinition = {
   path,
   results,
   describeArgs: () => [
-    `* invoke UnderTheSea using (${args.underthesea_command})`,
+    `* invoke sebastian using (${args.sebastian_command})`,
     `* restock codpiece pearls at up to (${args.pearl_price}) meat each`,
   ],
   quest: {
@@ -80,22 +80,22 @@ export const sea: PathDefinition = {
         do: (): void => {
           statusUpdate("loopseastart", "Jumping gash into the sea");
           ascendInto(path, { moon: "platypus" });
-          // UnderTheSea can get stuck on the intro noncombat, so clear it here
+          // sebastian can get stuck on the intro noncombat, so clear it here
           visitUrl("main.php");
           while (handlingChoice()) runChoice(1);
         },
       },
       {
-        name: "UnderTheSea",
-        // Only in the path: run in aftercore, UnderTheSea starts an aftercore sea quest instead
+        name: "sebastian",
+        // Only in the path: run in aftercore, sebastian starts an aftercore sea quest instead
         ready: () => inPath(path),
         completed: () => canInteract() || seaceressDefeated(),
         do: (): void => {
-          statusUpdate("loopseastart", "Starting `UnderTheSea`");
-          trackResults(results, () => external("underthesea"));
-          // UnderTheSea frees the king itself, so this is usually the only place to count turns
+          statusUpdate("loopseastart", "Starting `sebastian`");
+          trackResults(results, () => external("sebastian"));
+          // sebastian frees the king itself, so this is usually the only place to count turns
           results.turns = myTurncount();
-          statusUpdate("loopseaend", "Done with `UnderTheSea`");
+          statusUpdate("loopseaend", "Done with `sebastian`");
         },
       },
       {

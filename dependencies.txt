@@ -11,4 +11,5 @@ github loathers/crimbo release
 github Pantocyclus/PVP_MAB release
 github Kasekopf/loopstar release
 github Kasekopf/looprobot release
-github Astro3207/UnderTheSea main
+github pstalcup/sebastian release
+github VeeArrKoL/seedfinder
