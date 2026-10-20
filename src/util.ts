@@ -125,6 +125,11 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
   list: Args.flag({ help: "list all tasks and then exit" }),
   args: Args.flag({ help: "print out a message showing what args will be used" }),
   sleep: Args.flag({ help: "sleep before executing main loop" }),
+  interrupt: Args.flag({
+    help: "ask a running halfloop (and garbo) to stop, then exit",
+    // halfloop_interrupt is the interrupt request itself, so it must not become this flag's default
+    setting: "",
+  }),
 });
 
 export function currentArgs(pathArgs: string[]): string[] {

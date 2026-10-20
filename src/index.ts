@@ -7,7 +7,7 @@ import { farm } from "./farm";
 import { notify } from "./notify";
 import { autoscend, currentPath, PathDefinition, PathResults, paths } from "./paths";
 import { pvp } from "./pvp";
-import { checkInterrupt, clearInterrupt, recordRun, ResultLine } from "./run";
+import { checkInterrupt, clearInterrupt, recordRun, requestInterrupt, ResultLine } from "./run";
 import {
   args,
   currentArgs,
@@ -40,6 +40,14 @@ class HalfloopEngine extends Engine {
 
 export function main(command = ""): void {
   Args.fill(args, command);
+
+  if (args.interrupt) {
+    requestInterrupt();
+    print(
+      "Interrupt requested. Garbo stops at its next task; halfloop stops before its next step.",
+    );
+    return;
+  }
 
   Clan.join("Bonus Adventures From Hell"); // make sure you start in the right place
 

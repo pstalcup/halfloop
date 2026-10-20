@@ -49,3 +49,5 @@ Halfloop installs a relay script. In the KoLmafia relay browser, pick `halfloop`
 - a settings form for every halfloop arg. Saved values become the new defaults, and anything passed on the command line still overrides them.
 
 While a run is in progress, the page refreshes itself every minute and shows an **Interrupt halfloop** button. It works like garbo's: garbo stops at its next task, and halfloop stops before starting its next step. Other loop scripts (phccs, loopstar, sebastian, ...) aren't interrupted, so halfloop stops once the current one finishes.
+
+You can request the same interrupt from the CLI with `halfloop interrupt`, or by setting `halfloop_interrupt` to `true`.
