@@ -25352,8 +25352,14 @@ var args = Args.create("halfloop", "Loop your brains out (on live tv)", {
 function currentArgs(pathArgs) {
   return ["* Ascend: (".concat(args.ascend, ")"), "* Run PVP fites: (".concat(args.pvp, ")"), args.adventures === 0 ? "* Keep no adventures and nightcap" : "* Keep ".concat(args.adventures, " adventures and do not nightcap"), "* invoke garbo using (".concat(args.garbo_command, ")"), "* invoke keeping-tabs using (".concat(args.keeping_tabs_command, ")"), "* invoke CONSUME using (".concat(args.consume_command, ")"), "* ascend in path (".concat(args.path, ")"), "* ascend as (".concat(args.class, ")"), "* farm mode: (".concat(args.mode, " => ").concat(mode(), ")")].concat(_toConsumableArray(pathArgs), _toConsumableArray(mode() === "crimbo" ? ["* invoke crimbo using (".concat(args.crimbo_command, ")")] : []));
 }
+
+/** Scripts that throw record why in _lastScriptError; pass that cause on. */
 function cliExecuteThrow(command) {
-  if (!require$$0.cliExecute(command)) throw "Failed to execute ".concat(command);
+  _set("_lastScriptError", "");
+  if (!require$$0.cliExecute(command)) {
+    var cause = get$2("_lastScriptError");
+    throw "Failed to execute ".concat(command).concat(cause ? ": ".concat(cause) : "");
+  }
 }
 var ROLLOVER_ADVENTURE_CAP = 200;
 
@@ -26454,8 +26460,12 @@ function main() {
     results: []
   });
   var error = undefined;
+  // abort() throws mafia's AbortException, which skips catch but still runs
+  // finally, so success means reaching the end, not "nothing was caught".
+  var finished = false;
   try {
     engine.run();
+    finished = true;
   } catch (e) {
     error = e;
     throw e;
@@ -26539,21 +26549,21 @@ function main() {
     resultMessage("Fights Tomorrow", "".concat(rolloverFights()));
     resultMessage("Lost Turns", "".concat(lostTurns, " to rollover"));
     recordRun(_objectSpread2({
-      state: error === undefined ? "finished" : "aborted",
+      state: finished ? "finished" : "aborted",
       path: path.name,
       startedAt,
       finishedAt: Date.now(),
       results: resultLines
-    }, error === undefined ? {} : {
-      error: "".concat(error)
+    }, finished ? {} : {
+      error: "".concat(error ?? "aborted (see mafia console)")
     }));
-    if (error === undefined) {
+    if (finished) {
       notify(summary.join("\n"), {
         title: "Halfloop finished",
         tags: ["white_check_mark"]
       });
     } else {
-      notify("".concat(error, "\n\n").concat(summary.join("\n")), {
+      notify("".concat(error ?? "aborted (see mafia console)", "\n\n").concat(summary.join("\n")), {
         title: "Halfloop aborted",
         tags: ["rotating_light"],
         priority: 5

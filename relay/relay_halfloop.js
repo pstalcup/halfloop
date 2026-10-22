@@ -25218,8 +25218,14 @@ var args = Args.create("halfloop", "Loop your brains out (on live tv)", {
     setting: ""
   })
 });
+
+/** Scripts that throw record why in _lastScriptError; pass that cause on. */
 function cliExecuteThrow(command) {
-  if (!require$$0.cliExecute(command)) throw "Failed to execute ".concat(command);
+  _set("_lastScriptError", "");
+  if (!require$$0.cliExecute(command)) {
+    var cause = get$2("_lastScriptError");
+    throw "Failed to execute ".concat(command).concat(cause ? ": ".concat(cause) : "");
+  }
 }
 var ROLLOVER_ADVENTURE_CAP = 200;
 
