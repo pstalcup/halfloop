@@ -25342,6 +25342,11 @@ var args = Args.create("halfloop", "Loop your brains out (on live tv)", {
   }),
   sleep: Args.flag({
     help: "sleep before executing main loop"
+  }),
+  interrupt: Args.flag({
+    help: "ask a running halfloop (and garbo) to stop, then exit",
+    // halfloop_interrupt is the interrupt request itself, so it must not become this flag's default
+    setting: ""
   })
 });
 function currentArgs(pathArgs) {
@@ -25370,6 +25375,9 @@ function rolloverTurns() {
   var base = require$$0.myAdventures() + require$$0.numericModifier("Adventures") + BASE_ROLLOVER_ADVENTURES;
   var kept = clamp(base, 0, ROLLOVER_ADVENTURE_CAP);
   return [kept + (have$1c($item(_templateObject2$7 || (_templateObject2$7 = _taggedTemplateLiteral(["potato alarm clock"])))) ? 5 : 0) + (have$1c($item(_templateObject3$6 || (_templateObject3$6 = _taggedTemplateLiteral(["etched hourglass"])))) ? 5 : 0), base - kept];
+}
+function rolloverFights() {
+  return require$$0.pvpAttacksLeft() + 10 + require$$0.numericModifier("PvP Fights");
 }
 function tapped(ascend) {
   // you are done for today if:
@@ -26312,6 +26320,35 @@ var pvp = {
   }]
 };
 
+/** The leading underscore makes mafia clear this at rollover, so it always describes today */
+var RUN_PROPERTY = "_halfloopRun";
+
+/** Save the state of today's run so the relay page can show it */
+function recordRun(record) {
+  _set(RUN_PROPERTY, JSON.stringify(record));
+}
+var INTERRUPT_PROPERTY = "halfloop_interrupt";
+
+/** Ask a running halfloop to stop. Garbo is asked too, since it is usually what is running */
+function requestInterrupt() {
+  _set(INTERRUPT_PROPERTY, true);
+  _set("garbo_interrupt", true);
+}
+
+/** Forget interrupts left over from a run that ended before it saw them */
+function clearInterrupt() {
+  _set(INTERRUPT_PROPERTY, false);
+  _set("garbo_interrupt", false);
+}
+
+/** Stop the run if the relay page asked us to */
+function checkInterrupt() {
+  if (get$2(INTERRUPT_PROPERTY, false)) {
+    clearInterrupt();
+    throw "User interrupt requested. Stopping halfloop.";
+  }
+}
+
 var HalfloopEngine = /*#__PURE__*/function (_Engine) {
   function HalfloopEngine() {
     var _this;
@@ -26327,6 +26364,7 @@ var HalfloopEngine = /*#__PURE__*/function (_Engine) {
   return _createClass(HalfloopEngine, [{
     key: "execute",
     value: function execute(task) {
+      checkInterrupt();
       var startingTurns = require$$0.totalTurnsPlayed();
       _superPropGet(HalfloopEngine, "execute", this, 3)([task]);
       var oldTurns = this.turns.get(task.name);
@@ -26353,13 +26391,15 @@ var HalfloopEngine = /*#__PURE__*/function (_Engine) {
     }
   }]);
 }(Engine);
-function rolloverFites() {
-  return require$$0.pvpAttacksLeft() + 10 + require$$0.numericModifier("PvP Fights");
-}
 function main() {
   var _path$describeArgs;
   var command = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "";
   Args.fill(args, command);
+  if (args.interrupt) {
+    requestInterrupt();
+    require$$0.print("Interrupt requested. Garbo stops at its next task; halfloop stops before its next step.");
+    return;
+  }
   Clan.join("Bonus Adventures From Hell"); // make sure you start in the right place
 
   var startingTurns = require$$0.totalTurnsPlayed();
@@ -26403,6 +26443,14 @@ function main() {
   runArgs.forEach(a => require$$0.print(a));
   if (args.args) return;
   if (args.sleep) require$$0.wait(5);
+  var startedAt = Date.now();
+  clearInterrupt();
+  recordRun({
+    state: "running",
+    path: path.name,
+    startedAt,
+    results: []
+  });
   var error = undefined;
   try {
     engine.run();
@@ -26463,9 +26511,14 @@ function main() {
     }))));
     var results = (meat, items) => "".concat(fmt(meat), " meat + ").concat(fmt(items), " items = ").concat(fmt(meat + items));
     var summary = [];
+    var resultLines = [];
     var resultMessage = function resultMessage(title, message) {
       var color = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : "black";
       summary.push("".concat(title, ": ").concat(message));
+      resultLines.push({
+        title,
+        message
+      });
       statusUpdate("r".concat(title.replace(" ", "").toLowerCase()), "".concat(title, " ").concat(message));
       require$$0.print("* ".concat(title, ": ").concat(message), color);
     };
@@ -26481,8 +26534,17 @@ function main() {
     resultMessage("Overall Results", "".concat(results(meat, items)));
     resultMessage("Swagger", "".concat(fmt(totalSwagger)));
     resultMessage("Turns Tomorrow", "".concat(turns, " (after potato and hourglass)"));
-    resultMessage("Fights Tomorrow", "".concat(rolloverFites()));
+    resultMessage("Fights Tomorrow", "".concat(rolloverFights()));
     resultMessage("Lost Turns", "".concat(lostTurns, " to rollover"));
+    recordRun(_objectSpread2({
+      state: error === undefined ? "finished" : "aborted",
+      path: path.name,
+      startedAt,
+      finishedAt: Date.now(),
+      results: resultLines
+    }, error === undefined ? {} : {
+      error: "".concat(error)
+    }));
     if (error === undefined) {
       notify(summary.join("\n"), {
         title: "Halfloop finished",
