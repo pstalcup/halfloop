@@ -27,7 +27,7 @@ import {
 } from "kolmafia";
 import { $class, $familiar, $item, clamp, get, have, Lifestyle, set, StrictMacro } from "libram";
 
-const lifestyleShortcuts = new Map([
+export const lifestyleShortcuts = new Map([
   ["hardcore", Lifestyle.hardcore],
   ["softcore", Lifestyle.softcore],
   ["casual", Lifestyle.casual],
@@ -77,9 +77,9 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
     help: "how to invoke looprobot",
     default: "looprobot",
   }),
-  underthesea_command: Args.string({
-    help: "how to invoke UnderTheSea",
-    default: "UnderTheSea",
+  sebastian_command: Args.string({
+    help: "how to invoke sebastian",
+    default: "sebastian",
   }),
   pearl_price: Args.number({
     help: "The most to pay for each unblemished pearl when restocking the codpiece for the sea",
@@ -125,6 +125,11 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
   list: Args.flag({ help: "list all tasks and then exit" }),
   args: Args.flag({ help: "print out a message showing what args will be used" }),
   sleep: Args.flag({ help: "sleep before executing main loop" }),
+  interrupt: Args.flag({
+    help: "ask a running halfloop (and garbo) to stop, then exit",
+    // halfloop_interrupt is the interrupt request itself, so it must not become this flag's default
+    setting: "",
+  }),
 });
 
 export function currentArgs(pathArgs: string[]): string[] {
@@ -179,6 +184,10 @@ export function rolloverTurns(): [number, number] {
   ];
 }
 
+export function rolloverFights(): number {
+  return pvpAttacksLeft() + 10 + numericModifier("PvP Fights");
+}
+
 export function tapped(ascend: boolean): boolean {
   // you are done for today if:
   // * when ascending, you have 0 turns
@@ -203,7 +212,7 @@ type DevExternalScript =
   | "phccs_gash"
   | "loopstar"
   | "looprobot"
-  | "underthesea"
+  | "sebastian"
   | "crimbo";
 const externalScripts = ["autoscend", "freecandy", "combo", "chrono", "moustacherider"] as const;
 type BuiltExternalScript = (typeof externalScripts)[number];

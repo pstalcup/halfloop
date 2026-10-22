@@ -59,9 +59,11 @@ const baseSettings = {
     : undefined,
 } satisfies RollupOptions;
 
-const entry = "halfloop";
-
-export default [{ [entry]: "src/index.ts" }].map((input) => ({
-  input,
+export default [
+  { input: { halfloop: "src/index.ts" }, dir: "dist/scripts/halfloop" },
+  { input: { relay_halfloop: "src/relay_halfloop.ts" }, dir: "dist/relay" },
+].map(({ input, dir }) => ({
   ...baseSettings,
+  input,
+  output: { ...baseSettings.output, dir },
 }));
