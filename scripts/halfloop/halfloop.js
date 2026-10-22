@@ -26400,6 +26400,8 @@ function main() {
     require$$0.print("Interrupt requested. Garbo stops at its next task; halfloop stops before its next step.");
     return;
   }
+  require$$0.cliExecute("refresh all"); // make sure mafia's view of the character is current
+
   Clan.join("Bonus Adventures From Hell"); // make sure you start in the right place
 
   var startingTurns = require$$0.totalTurnsPlayed();
