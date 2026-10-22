@@ -27,7 +27,7 @@ import {
 } from "kolmafia";
 import { $class, $familiar, $item, clamp, get, have, Lifestyle, set, StrictMacro } from "libram";
 
-const lifestyleShortcuts = new Map([
+export const lifestyleShortcuts = new Map([
   ["hardcore", Lifestyle.hardcore],
   ["softcore", Lifestyle.softcore],
   ["casual", Lifestyle.casual],
@@ -125,6 +125,11 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
   list: Args.flag({ help: "list all tasks and then exit" }),
   args: Args.flag({ help: "print out a message showing what args will be used" }),
   sleep: Args.flag({ help: "sleep before executing main loop" }),
+  interrupt: Args.flag({
+    help: "ask a running halfloop (and garbo) to stop, then exit",
+    // halfloop_interrupt is the interrupt request itself, so it must not become this flag's default
+    setting: "",
+  }),
 });
 
 export function currentArgs(pathArgs: string[]): string[] {
@@ -172,6 +177,10 @@ export function rolloverTurns(): [number, number] {
     kept + (have($item`potato alarm clock`) ? 5 : 0) + (have($item`etched hourglass`) ? 5 : 0),
     base - kept,
   ];
+}
+
+export function rolloverFights(): number {
+  return pvpAttacksLeft() + 10 + numericModifier("PvP Fights");
 }
 
 export function tapped(ascend: boolean): boolean {
