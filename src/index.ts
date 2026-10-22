@@ -1,5 +1,5 @@
 import { Args, Engine, getTasks, Task } from "grimoire-kolmafia";
-import { print, totalTurnsPlayed, wait } from "kolmafia";
+import { cliExecute, print, totalTurnsPlayed, wait } from "kolmafia";
 import { Clan, get, sumNumbers } from "libram";
 
 import { diet } from "./diet";
@@ -48,6 +48,8 @@ export function main(command = ""): void {
     );
     return;
   }
+
+  cliExecute("refresh all"); // make sure mafia's view of the character is current
 
   Clan.join("Bonus Adventures From Hell"); // make sure you start in the right place
 
