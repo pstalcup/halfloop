@@ -81,6 +81,10 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
     help: "how to invoke sebastian",
     default: "sebastian",
   }),
+  pearlo_command: Args.string({
+    help: "how to invoke pearlo before garbo on sea days, to farm the codpiece pearls (empty to skip)",
+    default: "pearlo codpiece",
+  }),
   pearl_price: Args.number({
     help: "The most to pay for each unblemished pearl when restocking the codpiece for the sea",
     default: 200_000,
@@ -213,6 +217,7 @@ type DevExternalScript =
   | "loopstar"
   | "looprobot"
   | "sebastian"
+  | "pearlo"
   | "crimbo";
 const externalScripts = ["autoscend", "freecandy", "combo", "chrono", "moustacherider"] as const;
 type BuiltExternalScript = (typeof externalScripts)[number];

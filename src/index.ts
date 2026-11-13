@@ -3,7 +3,7 @@ import { cliExecute, print, totalTurnsPlayed, wait } from "kolmafia";
 import { Clan, get, sumNumbers } from "libram";
 
 import { diet } from "./diet";
-import { farm } from "./farm";
+import { farm, pearloSummary } from "./farm";
 import { notify } from "./notify";
 import { autoscend, currentPath, PathDefinition, PathResults, paths } from "./paths";
 import { pvp } from "./pvp";
@@ -184,6 +184,8 @@ export function main(command = ""): void {
       resultMessage(`${path.name} Results`, `${results(pathTotal.meat, pathTotal.items)}`);
       resultMessage(`${path.name} Summary`, `${fmt(path.results.turns)} turns`);
     }
+    const pearlo = pearloSummary();
+    if (pearlo) resultMessage("Pearlo", pearlo, pearlo.includes("failed") ? "red" : "black");
     resultMessage("Overall Results", `${results(meat, items)}`);
     resultMessage("Swagger", `${fmt(totalSwagger)}`);
     resultMessage("Turns Tomorrow", `${turns} (after potato and hourglass)`);
