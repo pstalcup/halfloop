@@ -11,6 +11,7 @@ import {
   mallPrice,
   myAdventures,
   myClass,
+  print,
   repriceShop,
   runChoice,
   shopPrice,
@@ -28,6 +29,7 @@ import {
   $skill,
   byClass,
   Clan,
+  EternityCodpiece,
   get,
   getRemainingLiver,
   getRemainingStomach,
@@ -36,6 +38,7 @@ import {
   StrictMacro,
 } from "libram";
 
+import { currentPath } from "./paths";
 import {
   args,
   cliExecuteThrow,
@@ -163,6 +166,50 @@ function garboFarm() {
   ];
 }
 
+const PEARL_ZONES = [
+  "AnemoneMine",
+  "DiveBar",
+  "MarinaraTrench",
+  "MadnessReef",
+  "TheBriniestDeepests",
+] as const;
+export const PEARLO_PROPERTY = "_halfloopPearlo";
+
+/**
+ * The sea path uses up the codpiece pearls every run. Farming them takes turns, so run pearlo
+ * once diet has the day's turns in hand and before garbo spends them. The mall restock at the
+ * jump still covers any slot pearlo didn't fill, so a pearlo failure never stops the day.
+ */
+const pearlo: Task = {
+  name: "pearlo",
+  ready: () =>
+    currentPath().name === "sea" &&
+    canInteract() &&
+    willAscend() &&
+    EternityCodpiece.have() &&
+    args.pearlo_command !== "",
+  completed: () =>
+    get(PEARLO_PROPERTY, "") !== "" ||
+    PEARL_ZONES.every((zone) => get(`_unblemishedPearl${zone}`, false)),
+  do: (): void => {
+    try {
+      external("pearlo");
+      set(PEARLO_PROPERTY, "ran");
+    } catch (e) {
+      print(`pearlo failed, leaving the codpiece to the mall restock: ${e}`, "red");
+      set(PEARLO_PROPERTY, `failed: ${e}`);
+    }
+  },
+};
+
+/** One line for the end of day summary, or undefined when pearlo didn't run today */
+export function pearloSummary(): string | undefined {
+  const ran = get(PEARLO_PROPERTY, "");
+  if (ran === "") return undefined;
+  const pearls = PEARL_ZONES.filter((zone) => get(`_unblemishedPearl${zone}`, false)).length;
+  return `${pearls}/${PEARL_ZONES.length} pearls farmed today${ran === "ran" ? "" : ` (${ran})`}`;
+}
+
 function primaryFarmTasks() {
   if (halloween()) {
     return halloweenFarm();
@@ -217,6 +264,7 @@ export const farm: () => Quest<Task> = () => ({
       completed: () => get("_questPartyFair") !== "unstarted",
       do: () => cliExecuteThrow("duffo go"),
     },
+    pearlo,
     ...primaryFarmTasks(),
     {
       name: "pajamas",

@@ -67,6 +67,9 @@ export const sea: PathDefinition = {
   results,
   describeArgs: () => [
     `* invoke sebastian using (${args.sebastian_command})`,
+    args.pearlo_command
+      ? `* farm codpiece pearls using (${args.pearlo_command})`
+      : "* do not farm codpiece pearls",
     `* restock codpiece pearls at up to (${args.pearl_price}) meat each`,
   ],
   quest: {
