@@ -25305,6 +25305,10 @@ var args = Args.create("halfloop", "Loop your brains out (on live tv)", {
     help: "how to invoke sebastian",
     default: "sebastian"
   }),
+  pearlo_command: Args.string({
+    help: "how to invoke pearlo before garbo on sea days, to farm the codpiece pearls (empty to skip)",
+    default: "pearlo codpiece"
+  }),
   pearl_price: Args.number({
     help: "The most to pay for each unblemished pearl when restocking the codpiece for the sea",
     default: 200_000
@@ -25640,9 +25644,434 @@ var diet = {
   }], _toConsumableArray(primaryDietTasks()))
 };
 
-var _templateObject$7, _templateObject2$5, _templateObject3$4, _templateObject4$2, _templateObject5$1, _templateObject6, _templateObject7, _templateObject8, _templateObject9, _templateObject0, _templateObject1, _templateObject10, _templateObject11, _templateObject12, _templateObject13, _templateObject14, _templateObject15, _templateObject16, _templateObject17, _templateObject18, _templateObject19, _templateObject20;
-var SNOWBALL = $item(_templateObject$7 || (_templateObject$7 = _taggedTemplateLiteral(["precision snowball"])));
-var RUNAWAY_MACRO = StrictMacro.if_($monsters(_templateObject2$5 || (_templateObject2$5 = _taggedTemplateLiteral(["giant rubber spider, time-spinner prank"]))), StrictMacro.skill($skill(_templateObject3$4 || (_templateObject3$4 = _taggedTemplateLiteral(["Saucegeyser"])))).repeat()).externalIf(have$1c($effect(_templateObject4$2 || (_templateObject4$2 = _taggedTemplateLiteral(["Eldritch Attunement"])))), StrictMacro.if_($monster(_templateObject5$1 || (_templateObject5$1 = _taggedTemplateLiteral(["Eldritch Tentacle"]))), StrictMacro.skill($skill(_templateObject6 || (_templateObject6 = _taggedTemplateLiteral(["Saucegeyser"])))).repeat())).runaway();
+var _templateObject$7, _templateObject2$5, _templateObject3$4;
+function newResults() {
+  return {
+    meat: 0,
+    items: 0,
+    turns: 0
+  };
+}
+
+/** Run `action` and record the meat and items it gained into `results` */
+function trackResults(results, action) {
+  var start = Session.current();
+  action();
+  var _Session$diff$value = Session.diff(Session.current(), start).value(halfloopValue),
+    meat = _Session$diff$value.meat,
+    items = _Session$diff$value.items;
+  results.meat = meat;
+  results.items = items;
+}
+function inPath(path) {
+  return require$$0.myPath() === path;
+}
+function prepareGash() {
+  ascensionCheck();
+  prepareAscension({
+    garden: "packet of rock seeds",
+    eudora: "Our Daily Candles™ order form"
+  });
+}
+function ascendInto(path, _ref) {
+  var moon = _ref.moon,
+    lifestyle = _ref.lifestyle,
+    permSkills = _ref.permSkills;
+  ascend(_objectSpread2({
+    path,
+    playerClass: args.class,
+    lifestyle: lifestyle ?? args.lifestyle,
+    moon,
+    pet: $item(_templateObject$7 || (_templateObject$7 = _taggedTemplateLiteral(["astral belt"]))),
+    consumable: $item(_templateObject2$5 || (_templateObject2$5 = _taggedTemplateLiteral(["astral six-pack"])))
+  }, permSkills ? {
+    permOptions: {
+      permSkills: new Map(skillsToPerm().map(s => [s, Lifestyle.hardcore])),
+      neverAbort: false
+    }
+  } : {}));
+}
+function breakPrism() {
+  require$$0.visitUrl("place.php?whichplace=nstower&action=ns_11_prism");
+}
+var hagnk = {
+  name: "hagnk",
+  ready: () => require$$0.canInteract(),
+  completed: () => get$2("lastEmptiedStorage") === require$$0.myAscensions(),
+  do: () => cliExecuteThrow("hagnk all")
+};
+
+/**
+ * The ascension we last ran aftercore breakfast in. Mafia has no property that means "the
+ * breakfast command ran": `breakfastCompleted` only tracks skill casts, and `lastBreakfast` is
+ * only written by login breakfast. The leading underscore makes mafia clear this at rollover.
+ */
+var BREAKFAST_PROPERTY = "_halfloopBreakfast";
+function runBreakfast() {
+  cliExecuteThrow("breakfast");
+  _set(BREAKFAST_PROPERTY, require$$0.myAscensions());
+}
+function breakfastDone() {
+  return get$2(BREAKFAST_PROPERTY, -1) === require$$0.myAscensions();
+}
+
+/** Breakfast once per day per ascension, after the king is freed so aftercore settings apply */
+var breakfast = {
+  name: "breakfast",
+  ready: () => require$$0.canInteract(),
+  completed: breakfastDone,
+  do: runBreakfast
+};
+
+/** Once the Friars are done, have `script` fill our organs so we pick up Liver of Steel */
+function liverOfSteel(script) {
+  return {
+    name: "liver of steel",
+    ready: () => questStep("questL06Friar") === 999,
+    completed: () => have$1c($skill(_templateObject3$4 || (_templateObject3$4 = _taggedTemplateLiteral(["Liver of Steel"])))),
+    do: () => external(script, {
+      key: "goal",
+      value: "organ"
+    })
+  };
+}
+
+var path$4 = $path.none;
+var results$4 = newResults();
+var casual = {
+  name: "casual",
+  path: path$4,
+  results: results$4,
+  describeArgs: () => ["* invoke loopstar using (".concat(args.loopstar_command, ")")],
+  quest: {
+    name: "casual",
+    tasks: [{
+      name: "gash",
+      prepare: prepareGash,
+      ready: () => tapped(true) && willAscend(),
+      completed: () => questStep("questL13Final") <= 13,
+      do: () => {
+        statusUpdate("loopcasualstart", "Jumping gash into casual");
+        ascendInto(path$4, {
+          moon: "platypus",
+          lifestyle: Lifestyle.casual,
+          permSkills: true
+        });
+        require$$0.visitUrl("main.php");
+        while (require$$0.handlingChoice()) require$$0.runChoice(1);
+      }
+    }, {
+      name: "loopstar",
+      ready: () => inPath(path$4),
+      completed: () => questStep("questL13Final") >= 13,
+      do: () => {
+        require$$0.print("".concat(questStep("questL13Final")));
+        statusUpdate("loopstar", "Starting `loopstar`");
+        require$$0.floristAvailable();
+        trackResults(results$4, () => external("loopstar"));
+        statusUpdate("loopcasualend", "Done with `loopstar`");
+        results$4.turns = require$$0.myTurncount();
+      }
+    }, {
+      name: "casual prism break",
+      completed: () => questStep("questL13Final") > 13,
+      do: breakPrism
+    }, hagnk, breakfast]
+  }
+};
+
+var _templateObject$6, _templateObject2$4, _templateObject3$3;
+var results$3 = newResults();
+var cs = {
+  name: "cs",
+  path: $path(_templateObject$6 || (_templateObject$6 = _taggedTemplateLiteral(["Community Service"]))),
+  results: results$3,
+  describeArgs: () => ["* invoke phccs_gash using (".concat(args.phccs_gash_command, ")"), "* invoke phccs using (".concat(args.phccs_command, ")")],
+  quest: {
+    name: "cs",
+    tasks: [{
+      name: "phccs_gash",
+      prepare: ascensionCheck,
+      ready: () => tapped(true) && args.ascend,
+      completed: () => get$2("ascensionsToday") > 0,
+      do: () => external("phccs_gash", "".concat(args.lifestyle === Lifestyle.hardcore ? "hardcore" : "softcore"), {
+        key: "class",
+        value: "".concat(args.class)
+      })
+    }, {
+      name: "phccs",
+      ready: () => get$2("ascensionsToday") === 1,
+      completed: () => get$2("questL13Final") === "finished",
+      do: () => {
+        require$$0.putCloset($item(_templateObject2$4 || (_templateObject2$4 = _taggedTemplateLiteral(["Leprecondo"]))));
+        trackResults(results$3, () => external("phccs"));
+        require$$0.takeCloset($item(_templateObject3$3 || (_templateObject3$3 = _taggedTemplateLiteral(["Leprecondo"]))));
+        results$3.turns = require$$0.myTurncount();
+        require$$0.cliExecute("refresh all");
+      }
+    }, hagnk, breakfast],
+    completed: () => get$2("ascensionsToday") === 1 && get$2("questL13Final") === "finished" && breakfastDone()
+  }
+};
+
+var _templateObject$5;
+var path$3 = $path(_templateObject$5 || (_templateObject$5 = _taggedTemplateLiteral(["You, Robot"])));
+var results$2 = newResults();
+var robot = {
+  name: "robot",
+  path: path$3,
+  results: results$2,
+  describeArgs: () => ["* invoke looprobot using (".concat(args.looprobot_command, ")")],
+  quest: {
+    name: "robot",
+    tasks: [{
+      name: "robot gash",
+      prepare: prepareGash,
+      ready: () => tapped(true) && args.ascend,
+      completed: () => !require$$0.canInteract() && inPath(path$3),
+      do: () => {
+        ascendInto(path$3, {
+          moon: "vole"
+        });
+        if (require$$0.visitUrl("main.php").includes("one made of rusty metal and scrap wiring")) {
+          require$$0.runChoice(1);
+        }
+        require$$0.cliExecute("refresh all");
+      }
+    }, {
+      name: "looprobot",
+      ready: () => inPath(path$3),
+      completed: () => require$$0.canInteract() || questStep("questL13Final") === 13,
+      do: () => {
+        statusUpdate("looprobotstart", "Starting `looprobot`");
+        trackResults(results$2, () => external("looprobot"));
+        statusUpdate("looprobotend", "Done with `looprobot`");
+      }
+    }, {
+      name: "looprobot prism break",
+      ready: () => inPath(path$3) && questStep("questL13Final") === 13,
+      completed: () => require$$0.canInteract(),
+      do: () => {
+        results$2.turns = require$$0.myTurncount();
+        statusUpdate("looprobotprism", "Breaking robot prism. That took ".concat(results$2.turns, " turns"));
+        breakPrism();
+      }
+    }, hagnk, breakfast, liverOfSteel("loopstar")]
+  }
+};
+
+var _templateObject$4, _templateObject2$3;
+var path$2 = $path(_templateObject$4 || (_templateObject$4 = _taggedTemplateLiteral(["11,037 Leagues Under the Sea"])));
+var results$1 = newResults();
+
+/**
+ * The sea path has no prism. Mafia marks questL13Final finished when the Nautical Seaceress
+ * dies, but the king is only freed (and the path left) by then visiting the council.
+ */
+var seaceressDefeated = () => get$2("questL13Final") === "finished";
+var pearl = $item(_templateObject2$3 || (_templateObject2$3 = _taggedTemplateLiteral(["unblemished pearl"])));
+
+/**
+ * Gems stay in the Eternity Codpiece through ascension, so loading it with unblemished pearls
+ * (+1 adventure each) before jumping smuggles five extra adventures a day into the sea. The sea
+ * path uses the pearls up, so every jump restocks whatever slots are empty from the mall.
+ */
+function loadCodpiecePearls() {
+  if (!have$9()) return;
+  // Mafia parses the codpiece page, so this picks up pearls the last run consumed
+  require$$0.visitUrl("inventory.php?action=docodpiece");
+  var emptySlots = SLOTS.filter(slot => require$$0.equippedItem(slot) !== pearl);
+  if (emptySlots.length === 0) return;
+  var toBuy = emptySlots.length - require$$0.itemAmount(pearl);
+  if (toBuy > 0) require$$0.buy(pearl, toBuy, args.pearl_price);
+  if (require$$0.itemAmount(pearl) < emptySlots.length) {
+    throw "Couldn't buy ".concat(emptySlots.length, " ").concat(pearl, " at ").concat(args.pearl_price, " meat or less (have ").concat(require$$0.itemAmount(pearl), ")");
+  }
+  var _iterator = _createForOfIteratorHelper(emptySlots),
+    _step;
+  try {
+    for (_iterator.s(); !(_step = _iterator.n()).done;) {
+      var slot = _step.value;
+      if (!require$$0.equip(slot, pearl)) throw "Failed to put ".concat(pearl, " in ").concat(slot);
+    }
+  } catch (err) {
+    _iterator.e(err);
+  } finally {
+    _iterator.f();
+  }
+}
+function prepareSeaGash() {
+  prepareGash();
+  loadCodpiecePearls();
+}
+var sea = {
+  name: "sea",
+  path: path$2,
+  results: results$1,
+  describeArgs: () => ["* invoke sebastian using (".concat(args.sebastian_command, ")"), args.pearlo_command ? "* farm codpiece pearls using (".concat(args.pearlo_command, ")") : "* do not farm codpiece pearls", "* restock codpiece pearls at up to (".concat(args.pearl_price, ") meat each")],
+  quest: {
+    name: "sea",
+    tasks: [{
+      name: "sea gash",
+      prepare: prepareSeaGash,
+      ready: () => tapped(true) && willAscend(),
+      completed: () => !require$$0.canInteract() && inPath(path$2),
+      do: () => {
+        statusUpdate("loopseastart", "Jumping gash into the sea");
+        ascendInto(path$2, {
+          moon: "platypus"
+        });
+        // sebastian can get stuck on the intro noncombat, so clear it here
+        require$$0.visitUrl("main.php");
+        while (require$$0.handlingChoice()) require$$0.runChoice(1);
+      }
+    }, {
+      name: "sebastian",
+      // Only in the path: run in aftercore, sebastian starts an aftercore sea quest instead
+      ready: () => inPath(path$2),
+      completed: () => require$$0.canInteract() || seaceressDefeated(),
+      do: () => {
+        statusUpdate("loopseastart", "Starting `sebastian`");
+        trackResults(results$1, () => external("sebastian"));
+        // sebastian frees the king itself, so this is usually the only place to count turns
+        results$1.turns = require$$0.myTurncount();
+        statusUpdate("loopseaend", "Done with `sebastian`");
+      }
+    }, {
+      name: "sea free king",
+      ready: () => inPath(path$2) && seaceressDefeated(),
+      completed: () => require$$0.canInteract(),
+      do: () => {
+        results$1.turns = require$$0.myTurncount();
+        statusUpdate("loopseaking", "Freeing the sea king. That took ".concat(results$1.turns, " turns"));
+        require$$0.visitUrl("council.php");
+        // Choice 1565 is the sea path council; its first option frees the king
+        if (require$$0.handlingChoice()) require$$0.runChoice(1);
+      }
+    }, hagnk, breakfast]
+  }
+};
+
+var _templateObject$3, _templateObject2$2, _templateObject3$2, _templateObject4$2, _templateObject5$1;
+var path$1 = $path(_templateObject$3 || (_templateObject$3 = _taggedTemplateLiteral(["A Shrunken Adventurer am I"])));
+var results = newResults();
+var soberedUp = () => tapped(false) || getRemainingLiver() >= 0;
+var smol = {
+  name: "smol",
+  path: path$1,
+  results,
+  describeArgs: () => ["* invoke loopstar using (".concat(args.loopstar_command, ")")],
+  quest: {
+    name: "smol",
+    tasks: [{
+      name: "smol gash",
+      prepare: prepareGash,
+      ready: () => tapped(true) && willAscend(),
+      completed: () => !require$$0.canInteract() && inPath(path$1),
+      do: () => {
+        statusUpdate("loopsmolstart", "Jumping gash into smol");
+        ascendInto(path$1, {
+          moon: "platypus",
+          permSkills: true
+        });
+        require$$0.visitUrl("main.php");
+        while (require$$0.handlingChoice()) require$$0.runChoice(1);
+      }
+    }, {
+      name: "loopsmol",
+      ready: () => inPath(path$1),
+      completed: () => require$$0.canInteract() || questStep("questL13Final") === 13,
+      do: () => {
+        statusUpdate("loopsmolstart", "Starting `loopsmol`");
+        require$$0.floristAvailable();
+        trackResults(results, () => external("loopstar"));
+        statusUpdate("loopsmolend", "Done with `loopsmol`");
+      }
+    }, {
+      name: "loopsmol prism break",
+      ready: () => inPath(path$1) && questStep("questL13Final") === 13,
+      completed: () => require$$0.canInteract(),
+      do: () => {
+        require$$0.drink($item(_templateObject2$2 || (_templateObject2$2 = _taggedTemplateLiteral(["astral pilsner"]))));
+        results.turns = require$$0.myTurncount();
+        statusUpdate("loopsmolprism", "Breaking smol prism. That took ".concat(results.turns, " turns"));
+        breakPrism();
+      },
+      post: () => {
+        if (get$2("sweat") < 75) require$$0.abort("Not enough sweat");
+      }
+    }, hagnk, breakfast, {
+      name: "smol sober up (sweat it out)",
+      ready: () => require$$0.canInteract() && get$2("_sweatOutSomeBoozeUsed") < 3,
+      completed: soberedUp,
+      do: () => require$$0.useSkill($skill(_templateObject3$2 || (_templateObject3$2 = _taggedTemplateLiteral(["Sweat Out Some Booze"]))))
+    }, {
+      name: "smol sober up (sobrie tea)",
+      ready: () => require$$0.canInteract() && !get$2("_pottedTeaTreeUsed"),
+      completed: soberedUp,
+      do: () => {
+        cliExecuteThrow("teatree sobrie tea");
+        require$$0.use($item(_templateObject4$2 || (_templateObject4$2 = _taggedTemplateLiteral(["cuppa Sobrie tea"]))));
+      }
+    }, {
+      name: "smol sober up (dog hair)",
+      ready: () => require$$0.canInteract() && !get$2("_syntheticDogHairPillUsed"),
+      completed: soberedUp,
+      do: () => require$$0.use($item(_templateObject5$1 || (_templateObject5$1 = _taggedTemplateLiteral(["synthetic dog hair pill"]))))
+    }, liverOfSteel("loopstar")]
+  }
+};
+
+var _templateObject$2;
+var path = $path(_templateObject$2 || (_templateObject$2 = _taggedTemplateLiteral(["Standard"])));
+var standard = {
+  name: "standard",
+  path,
+  quest: {
+    name: "standard",
+    tasks: [{
+      name: "standard gash",
+      prepare: prepareGash,
+      ready: () => tapped(true) && args.ascend,
+      completed: () => !require$$0.canInteract() && inPath(path),
+      do: () => ascendInto(path, {
+        moon: "knoll"
+      })
+    }, hagnk, breakfast]
+  }
+};
+
+/** Every path halfloop knows how to run. Add new paths here. */
+var paths = [cs, smol, robot, sea, standard, casual];
+
+/** Paths that autoscend should never be used to finish */
+var uniquePaths = [cs.path, smol.path, sea.path];
+var autoscend = {
+  name: "autoscend",
+  tasks: [{
+    name: "autoscend",
+    ready: () => getRemainingLiver() > 0 && !uniquePaths.includes(require$$0.myPath()),
+    completed: () => require$$0.canInteract(),
+    do: () => external("autoscend")
+  }]
+};
+
+/** The path selected by the `path` arg, given as a short name (e.g. smol) or a full path name */
+function currentPath() {
+  var selected = paths.find(_ref => {
+    var name = _ref.name;
+    return name === args.path;
+  }) ?? paths.find(_ref2 => {
+    var path = _ref2.path;
+    return path === require$$0.toPath(args.path);
+  });
+  if (!selected) throw "Unsupported Path ".concat(args.path);
+  return selected;
+}
+
+var _templateObject$1, _templateObject2$1, _templateObject3$1, _templateObject4$1, _templateObject5, _templateObject6, _templateObject7, _templateObject8, _templateObject9, _templateObject0, _templateObject1, _templateObject10, _templateObject11, _templateObject12, _templateObject13, _templateObject14, _templateObject15, _templateObject16, _templateObject17, _templateObject18, _templateObject19, _templateObject20;
+var SNOWBALL = $item(_templateObject$1 || (_templateObject$1 = _taggedTemplateLiteral(["precision snowball"])));
+var RUNAWAY_MACRO = StrictMacro.if_($monsters(_templateObject2$1 || (_templateObject2$1 = _taggedTemplateLiteral(["giant rubber spider, time-spinner prank"]))), StrictMacro.skill($skill(_templateObject3$1 || (_templateObject3$1 = _taggedTemplateLiteral(["Saucegeyser"])))).repeat()).externalIf(have$1c($effect(_templateObject4$1 || (_templateObject4$1 = _taggedTemplateLiteral(["Eldritch Attunement"])))), StrictMacro.if_($monster(_templateObject5 || (_templateObject5 = _taggedTemplateLiteral(["Eldritch Tentacle"]))), StrictMacro.skill($skill(_templateObject6 || (_templateObject6 = _taggedTemplateLiteral(["Saucegeyser"])))).repeat())).runaway();
 var RAFFLE_TICKET_COUNT = 111;
 var HALLOWEEN_FAMILIAR = $familiar(_templateObject7 || (_templateObject7 = _taggedTemplateLiteral(["Red-Nosed Snapper"])));
 var HALLOWEEN_OUTFIT = "Ceramic Suit";
@@ -25730,6 +26159,36 @@ function garboFarm() {
     do: () => external("garbo", "-".concat(args.adventures))
   }];
 }
+var PEARL_ZONES = ["AnemoneMine", "DiveBar", "MarinaraTrench", "MadnessReef", "TheBriniestDeepests"];
+var PEARLO_PROPERTY = "_halfloopPearlo";
+
+/**
+ * The sea path uses up the codpiece pearls every run. Farming them takes turns, so run pearlo
+ * once diet has the day's turns in hand and before garbo spends them. The mall restock at the
+ * jump still covers any slot pearlo didn't fill, so a pearlo failure never stops the day.
+ */
+var pearlo = {
+  name: "pearlo",
+  ready: () => currentPath().name === "sea" && require$$0.canInteract() && willAscend() && have$9() && args.pearlo_command !== "",
+  completed: () => get$2(PEARLO_PROPERTY, "") !== "" || PEARL_ZONES.every(zone => get$2("_unblemishedPearl".concat(zone), false)),
+  do: () => {
+    try {
+      external("pearlo");
+      _set(PEARLO_PROPERTY, "ran");
+    } catch (e) {
+      require$$0.print("pearlo failed, leaving the codpiece to the mall restock: ".concat(e), "red");
+      _set(PEARLO_PROPERTY, "failed: ".concat(e));
+    }
+  }
+};
+
+/** One line for the end of day summary, or undefined when pearlo didn't run today */
+function pearloSummary() {
+  var ran = get$2(PEARLO_PROPERTY, "");
+  if (ran === "") return undefined;
+  var pearls = PEARL_ZONES.filter(zone => get$2("_unblemishedPearl".concat(zone), false)).length;
+  return "".concat(pearls, "/").concat(PEARL_ZONES.length, " pearls farmed today").concat(ran === "ran" ? "" : " (".concat(ran, ")"));
+}
 function primaryFarmTasks() {
   if (halloween()) {
     return halloweenFarm();
@@ -25779,7 +26238,7 @@ var farm = () => ({
     ready: () => require$$0.canInteract() && ["", "food", "booze"].includes(get$2("_questPartyFairQuest")),
     completed: () => get$2("_questPartyFair") !== "unstarted",
     do: () => cliExecuteThrow("duffo go")
-  }].concat(_toConsumableArray(primaryFarmTasks()), [{
+  }, pearlo].concat(_toConsumableArray(primaryFarmTasks()), [{
     name: "pajamas",
     ready: () => require$$0.canInteract() && !willAscend() && args.adventures === 0,
     prepare: () => {
@@ -25867,431 +26326,6 @@ function notify(message, _ref) {
   } catch (e) {
     require$$0.print("Failed to send ntfy notification: ".concat(e), "red");
   }
-}
-
-var _templateObject$6, _templateObject2$4, _templateObject3$3;
-function newResults() {
-  return {
-    meat: 0,
-    items: 0,
-    turns: 0
-  };
-}
-
-/** Run `action` and record the meat and items it gained into `results` */
-function trackResults(results, action) {
-  var start = Session.current();
-  action();
-  var _Session$diff$value = Session.diff(Session.current(), start).value(halfloopValue),
-    meat = _Session$diff$value.meat,
-    items = _Session$diff$value.items;
-  results.meat = meat;
-  results.items = items;
-}
-function inPath(path) {
-  return require$$0.myPath() === path;
-}
-function prepareGash() {
-  ascensionCheck();
-  prepareAscension({
-    garden: "packet of rock seeds",
-    eudora: "Our Daily Candles™ order form"
-  });
-}
-function ascendInto(path, _ref) {
-  var moon = _ref.moon,
-    lifestyle = _ref.lifestyle,
-    permSkills = _ref.permSkills;
-  ascend(_objectSpread2({
-    path,
-    playerClass: args.class,
-    lifestyle: lifestyle ?? args.lifestyle,
-    moon,
-    pet: $item(_templateObject$6 || (_templateObject$6 = _taggedTemplateLiteral(["astral belt"]))),
-    consumable: $item(_templateObject2$4 || (_templateObject2$4 = _taggedTemplateLiteral(["astral six-pack"])))
-  }, permSkills ? {
-    permOptions: {
-      permSkills: new Map(skillsToPerm().map(s => [s, Lifestyle.hardcore])),
-      neverAbort: false
-    }
-  } : {}));
-}
-function breakPrism() {
-  require$$0.visitUrl("place.php?whichplace=nstower&action=ns_11_prism");
-}
-var hagnk = {
-  name: "hagnk",
-  ready: () => require$$0.canInteract(),
-  completed: () => get$2("lastEmptiedStorage") === require$$0.myAscensions(),
-  do: () => cliExecuteThrow("hagnk all")
-};
-
-/**
- * The ascension we last ran aftercore breakfast in. Mafia has no property that means "the
- * breakfast command ran": `breakfastCompleted` only tracks skill casts, and `lastBreakfast` is
- * only written by login breakfast. The leading underscore makes mafia clear this at rollover.
- */
-var BREAKFAST_PROPERTY = "_halfloopBreakfast";
-function runBreakfast() {
-  cliExecuteThrow("breakfast");
-  _set(BREAKFAST_PROPERTY, require$$0.myAscensions());
-}
-function breakfastDone() {
-  return get$2(BREAKFAST_PROPERTY, -1) === require$$0.myAscensions();
-}
-
-/** Breakfast once per day per ascension, after the king is freed so aftercore settings apply */
-var breakfast = {
-  name: "breakfast",
-  ready: () => require$$0.canInteract(),
-  completed: breakfastDone,
-  do: runBreakfast
-};
-
-/** Once the Friars are done, have `script` fill our organs so we pick up Liver of Steel */
-function liverOfSteel(script) {
-  return {
-    name: "liver of steel",
-    ready: () => questStep("questL06Friar") === 999,
-    completed: () => have$1c($skill(_templateObject3$3 || (_templateObject3$3 = _taggedTemplateLiteral(["Liver of Steel"])))),
-    do: () => external(script, {
-      key: "goal",
-      value: "organ"
-    })
-  };
-}
-
-var path$4 = $path.none;
-var results$4 = newResults();
-var casual = {
-  name: "casual",
-  path: path$4,
-  results: results$4,
-  describeArgs: () => ["* invoke loopstar using (".concat(args.loopstar_command, ")")],
-  quest: {
-    name: "casual",
-    tasks: [{
-      name: "gash",
-      prepare: prepareGash,
-      ready: () => tapped(true) && willAscend(),
-      completed: () => questStep("questL13Final") <= 13,
-      do: () => {
-        statusUpdate("loopcasualstart", "Jumping gash into casual");
-        ascendInto(path$4, {
-          moon: "platypus",
-          lifestyle: Lifestyle.casual,
-          permSkills: true
-        });
-        require$$0.visitUrl("main.php");
-        while (require$$0.handlingChoice()) require$$0.runChoice(1);
-      }
-    }, {
-      name: "loopstar",
-      ready: () => inPath(path$4),
-      completed: () => questStep("questL13Final") >= 13,
-      do: () => {
-        require$$0.print("".concat(questStep("questL13Final")));
-        statusUpdate("loopstar", "Starting `loopstar`");
-        require$$0.floristAvailable();
-        trackResults(results$4, () => external("loopstar"));
-        statusUpdate("loopcasualend", "Done with `loopstar`");
-        results$4.turns = require$$0.myTurncount();
-      }
-    }, {
-      name: "casual prism break",
-      completed: () => questStep("questL13Final") > 13,
-      do: breakPrism
-    }, hagnk, breakfast]
-  }
-};
-
-var _templateObject$5, _templateObject2$3, _templateObject3$2;
-var results$3 = newResults();
-var cs = {
-  name: "cs",
-  path: $path(_templateObject$5 || (_templateObject$5 = _taggedTemplateLiteral(["Community Service"]))),
-  results: results$3,
-  describeArgs: () => ["* invoke phccs_gash using (".concat(args.phccs_gash_command, ")"), "* invoke phccs using (".concat(args.phccs_command, ")")],
-  quest: {
-    name: "cs",
-    tasks: [{
-      name: "phccs_gash",
-      prepare: ascensionCheck,
-      ready: () => tapped(true) && args.ascend,
-      completed: () => get$2("ascensionsToday") > 0,
-      do: () => external("phccs_gash", "".concat(args.lifestyle === Lifestyle.hardcore ? "hardcore" : "softcore"), {
-        key: "class",
-        value: "".concat(args.class)
-      })
-    }, {
-      name: "phccs",
-      ready: () => get$2("ascensionsToday") === 1,
-      completed: () => get$2("questL13Final") === "finished",
-      do: () => {
-        require$$0.putCloset($item(_templateObject2$3 || (_templateObject2$3 = _taggedTemplateLiteral(["Leprecondo"]))));
-        trackResults(results$3, () => external("phccs"));
-        require$$0.takeCloset($item(_templateObject3$2 || (_templateObject3$2 = _taggedTemplateLiteral(["Leprecondo"]))));
-        results$3.turns = require$$0.myTurncount();
-        require$$0.cliExecute("refresh all");
-      }
-    }, hagnk, breakfast],
-    completed: () => get$2("ascensionsToday") === 1 && get$2("questL13Final") === "finished" && breakfastDone()
-  }
-};
-
-var _templateObject$4;
-var path$3 = $path(_templateObject$4 || (_templateObject$4 = _taggedTemplateLiteral(["You, Robot"])));
-var results$2 = newResults();
-var robot = {
-  name: "robot",
-  path: path$3,
-  results: results$2,
-  describeArgs: () => ["* invoke looprobot using (".concat(args.looprobot_command, ")")],
-  quest: {
-    name: "robot",
-    tasks: [{
-      name: "robot gash",
-      prepare: prepareGash,
-      ready: () => tapped(true) && args.ascend,
-      completed: () => !require$$0.canInteract() && inPath(path$3),
-      do: () => {
-        ascendInto(path$3, {
-          moon: "vole"
-        });
-        if (require$$0.visitUrl("main.php").includes("one made of rusty metal and scrap wiring")) {
-          require$$0.runChoice(1);
-        }
-        require$$0.cliExecute("refresh all");
-      }
-    }, {
-      name: "looprobot",
-      ready: () => inPath(path$3),
-      completed: () => require$$0.canInteract() || questStep("questL13Final") === 13,
-      do: () => {
-        statusUpdate("looprobotstart", "Starting `looprobot`");
-        trackResults(results$2, () => external("looprobot"));
-        statusUpdate("looprobotend", "Done with `looprobot`");
-      }
-    }, {
-      name: "looprobot prism break",
-      ready: () => inPath(path$3) && questStep("questL13Final") === 13,
-      completed: () => require$$0.canInteract(),
-      do: () => {
-        results$2.turns = require$$0.myTurncount();
-        statusUpdate("looprobotprism", "Breaking robot prism. That took ".concat(results$2.turns, " turns"));
-        breakPrism();
-      }
-    }, hagnk, breakfast, liverOfSteel("loopstar")]
-  }
-};
-
-var _templateObject$3, _templateObject2$2;
-var path$2 = $path(_templateObject$3 || (_templateObject$3 = _taggedTemplateLiteral(["11,037 Leagues Under the Sea"])));
-var results$1 = newResults();
-
-/**
- * The sea path has no prism. Mafia marks questL13Final finished when the Nautical Seaceress
- * dies, but the king is only freed (and the path left) by then visiting the council.
- */
-var seaceressDefeated = () => get$2("questL13Final") === "finished";
-var pearl = $item(_templateObject2$2 || (_templateObject2$2 = _taggedTemplateLiteral(["unblemished pearl"])));
-
-/**
- * Gems stay in the Eternity Codpiece through ascension, so loading it with unblemished pearls
- * (+1 adventure each) before jumping smuggles five extra adventures a day into the sea. The sea
- * path uses the pearls up, so every jump restocks whatever slots are empty from the mall.
- */
-function loadCodpiecePearls() {
-  if (!have$9()) return;
-  // Mafia parses the codpiece page, so this picks up pearls the last run consumed
-  require$$0.visitUrl("inventory.php?action=docodpiece");
-  var emptySlots = SLOTS.filter(slot => require$$0.equippedItem(slot) !== pearl);
-  if (emptySlots.length === 0) return;
-  var toBuy = emptySlots.length - require$$0.itemAmount(pearl);
-  if (toBuy > 0) require$$0.buy(pearl, toBuy, args.pearl_price);
-  if (require$$0.itemAmount(pearl) < emptySlots.length) {
-    throw "Couldn't buy ".concat(emptySlots.length, " ").concat(pearl, " at ").concat(args.pearl_price, " meat or less (have ").concat(require$$0.itemAmount(pearl), ")");
-  }
-  var _iterator = _createForOfIteratorHelper(emptySlots),
-    _step;
-  try {
-    for (_iterator.s(); !(_step = _iterator.n()).done;) {
-      var slot = _step.value;
-      if (!require$$0.equip(slot, pearl)) throw "Failed to put ".concat(pearl, " in ").concat(slot);
-    }
-  } catch (err) {
-    _iterator.e(err);
-  } finally {
-    _iterator.f();
-  }
-}
-function prepareSeaGash() {
-  prepareGash();
-  loadCodpiecePearls();
-}
-var sea = {
-  name: "sea",
-  path: path$2,
-  results: results$1,
-  describeArgs: () => ["* invoke sebastian using (".concat(args.sebastian_command, ")"), "* restock codpiece pearls at up to (".concat(args.pearl_price, ") meat each")],
-  quest: {
-    name: "sea",
-    tasks: [{
-      name: "sea gash",
-      prepare: prepareSeaGash,
-      ready: () => tapped(true) && willAscend(),
-      completed: () => !require$$0.canInteract() && inPath(path$2),
-      do: () => {
-        statusUpdate("loopseastart", "Jumping gash into the sea");
-        ascendInto(path$2, {
-          moon: "platypus"
-        });
-        // sebastian can get stuck on the intro noncombat, so clear it here
-        require$$0.visitUrl("main.php");
-        while (require$$0.handlingChoice()) require$$0.runChoice(1);
-      }
-    }, {
-      name: "sebastian",
-      // Only in the path: run in aftercore, sebastian starts an aftercore sea quest instead
-      ready: () => inPath(path$2),
-      completed: () => require$$0.canInteract() || seaceressDefeated(),
-      do: () => {
-        statusUpdate("loopseastart", "Starting `sebastian`");
-        trackResults(results$1, () => external("sebastian"));
-        // sebastian frees the king itself, so this is usually the only place to count turns
-        results$1.turns = require$$0.myTurncount();
-        statusUpdate("loopseaend", "Done with `sebastian`");
-      }
-    }, {
-      name: "sea free king",
-      ready: () => inPath(path$2) && seaceressDefeated(),
-      completed: () => require$$0.canInteract(),
-      do: () => {
-        results$1.turns = require$$0.myTurncount();
-        statusUpdate("loopseaking", "Freeing the sea king. That took ".concat(results$1.turns, " turns"));
-        require$$0.visitUrl("council.php");
-        // Choice 1565 is the sea path council; its first option frees the king
-        if (require$$0.handlingChoice()) require$$0.runChoice(1);
-      }
-    }, hagnk, breakfast]
-  }
-};
-
-var _templateObject$2, _templateObject2$1, _templateObject3$1, _templateObject4$1, _templateObject5;
-var path$1 = $path(_templateObject$2 || (_templateObject$2 = _taggedTemplateLiteral(["A Shrunken Adventurer am I"])));
-var results = newResults();
-var soberedUp = () => tapped(false) || getRemainingLiver() >= 0;
-var smol = {
-  name: "smol",
-  path: path$1,
-  results,
-  describeArgs: () => ["* invoke loopstar using (".concat(args.loopstar_command, ")")],
-  quest: {
-    name: "smol",
-    tasks: [{
-      name: "smol gash",
-      prepare: prepareGash,
-      ready: () => tapped(true) && willAscend(),
-      completed: () => !require$$0.canInteract() && inPath(path$1),
-      do: () => {
-        statusUpdate("loopsmolstart", "Jumping gash into smol");
-        ascendInto(path$1, {
-          moon: "platypus",
-          permSkills: true
-        });
-        require$$0.visitUrl("main.php");
-        while (require$$0.handlingChoice()) require$$0.runChoice(1);
-      }
-    }, {
-      name: "loopsmol",
-      ready: () => inPath(path$1),
-      completed: () => require$$0.canInteract() || questStep("questL13Final") === 13,
-      do: () => {
-        statusUpdate("loopsmolstart", "Starting `loopsmol`");
-        require$$0.floristAvailable();
-        trackResults(results, () => external("loopstar"));
-        statusUpdate("loopsmolend", "Done with `loopsmol`");
-      }
-    }, {
-      name: "loopsmol prism break",
-      ready: () => inPath(path$1) && questStep("questL13Final") === 13,
-      completed: () => require$$0.canInteract(),
-      do: () => {
-        require$$0.drink($item(_templateObject2$1 || (_templateObject2$1 = _taggedTemplateLiteral(["astral pilsner"]))));
-        results.turns = require$$0.myTurncount();
-        statusUpdate("loopsmolprism", "Breaking smol prism. That took ".concat(results.turns, " turns"));
-        breakPrism();
-      },
-      post: () => {
-        if (get$2("sweat") < 75) require$$0.abort("Not enough sweat");
-      }
-    }, hagnk, breakfast, {
-      name: "smol sober up (sweat it out)",
-      ready: () => require$$0.canInteract() && get$2("_sweatOutSomeBoozeUsed") < 3,
-      completed: soberedUp,
-      do: () => require$$0.useSkill($skill(_templateObject3$1 || (_templateObject3$1 = _taggedTemplateLiteral(["Sweat Out Some Booze"]))))
-    }, {
-      name: "smol sober up (sobrie tea)",
-      ready: () => require$$0.canInteract() && !get$2("_pottedTeaTreeUsed"),
-      completed: soberedUp,
-      do: () => {
-        cliExecuteThrow("teatree sobrie tea");
-        require$$0.use($item(_templateObject4$1 || (_templateObject4$1 = _taggedTemplateLiteral(["cuppa Sobrie tea"]))));
-      }
-    }, {
-      name: "smol sober up (dog hair)",
-      ready: () => require$$0.canInteract() && !get$2("_syntheticDogHairPillUsed"),
-      completed: soberedUp,
-      do: () => require$$0.use($item(_templateObject5 || (_templateObject5 = _taggedTemplateLiteral(["synthetic dog hair pill"]))))
-    }, liverOfSteel("loopstar")]
-  }
-};
-
-var _templateObject$1;
-var path = $path(_templateObject$1 || (_templateObject$1 = _taggedTemplateLiteral(["Standard"])));
-var standard = {
-  name: "standard",
-  path,
-  quest: {
-    name: "standard",
-    tasks: [{
-      name: "standard gash",
-      prepare: prepareGash,
-      ready: () => tapped(true) && args.ascend,
-      completed: () => !require$$0.canInteract() && inPath(path),
-      do: () => ascendInto(path, {
-        moon: "knoll"
-      })
-    }, hagnk, breakfast]
-  }
-};
-
-/** Every path halfloop knows how to run. Add new paths here. */
-var paths = [cs, smol, robot, sea, standard, casual];
-
-/** Paths that autoscend should never be used to finish */
-var uniquePaths = [cs.path, smol.path, sea.path];
-var autoscend = {
-  name: "autoscend",
-  tasks: [{
-    name: "autoscend",
-    ready: () => getRemainingLiver() > 0 && !uniquePaths.includes(require$$0.myPath()),
-    completed: () => require$$0.canInteract(),
-    do: () => external("autoscend")
-  }]
-};
-
-/** The path selected by the `path` arg, given as a short name (e.g. smol) or a full path name */
-function currentPath() {
-  var selected = paths.find(_ref => {
-    var name = _ref.name;
-    return name === args.path;
-  }) ?? paths.find(_ref2 => {
-    var path = _ref2.path;
-    return path === require$$0.toPath(args.path);
-  });
-  if (!selected) throw "Unsupported Path ".concat(args.path);
-  return selected;
 }
 
 var _templateObject, _templateObject2, _templateObject3, _templateObject4;
@@ -26543,6 +26577,8 @@ function main() {
       resultMessage("".concat(path.name, " Results"), "".concat(results(pathTotal.meat, pathTotal.items)));
       resultMessage("".concat(path.name, " Summary"), "".concat(fmt(path.results.turns), " turns"));
     }
+    var pearlo = pearloSummary();
+    if (pearlo) resultMessage("Pearlo", pearlo, pearlo.includes("failed") ? "red" : "black");
     resultMessage("Overall Results", "".concat(results(meat, items)));
     resultMessage("Swagger", "".concat(fmt(totalSwagger)));
     resultMessage("Turns Tomorrow", "".concat(turns, " (after potato and hourglass)"));

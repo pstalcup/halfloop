@@ -25174,6 +25174,10 @@ var args = Args.create("halfloop", "Loop your brains out (on live tv)", {
     help: "how to invoke sebastian",
     default: "sebastian"
   }),
+  pearlo_command: Args.string({
+    help: "how to invoke pearlo before garbo on sea days, to farm the codpiece pearls (empty to skip)",
+    default: "pearlo codpiece"
+  }),
   pearl_price: Args.number({
     help: "The most to pay for each unblemished pearl when restocking the codpiece for the sea",
     default: 200_000
@@ -25553,7 +25557,7 @@ var sea = {
   name: "sea",
   path: path$2,
   results: results$1,
-  describeArgs: () => ["* invoke sebastian using (".concat(args.sebastian_command, ")"), "* restock codpiece pearls at up to (".concat(args.pearl_price, ") meat each")],
+  describeArgs: () => ["* invoke sebastian using (".concat(args.sebastian_command, ")"), args.pearlo_command ? "* farm codpiece pearls using (".concat(args.pearlo_command, ")") : "* do not farm codpiece pearls", "* restock codpiece pearls at up to (".concat(args.pearl_price, ") meat each")],
   quest: {
     name: "sea",
     tasks: [{
