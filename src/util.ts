@@ -85,6 +85,10 @@ export const args = Args.create("halfloop", "Loop your brains out (on live tv)",
     help: "how to invoke pearlo before garbo on sea days, to farm the codpiece pearls (empty to skip)",
     default: "pearlo codpiece",
   }),
+  fomo_command: Args.string({
+    help: "how to invoke fomo after keeping tabs, to buy the Item of the Month (empty to skip)",
+    default: "fomo",
+  }),
   pearl_price: Args.number({
     help: "The most to pay for each unblemished pearl when restocking the codpiece for the sea",
     default: 200_000,
@@ -145,6 +149,7 @@ export function currentArgs(pathArgs: string[]): string[] {
       : `* Keep ${args.adventures} adventures and do not nightcap`,
     `* invoke garbo using (${args.garbo_command})`,
     `* invoke keeping-tabs using (${args.keeping_tabs_command})`,
+    `* invoke fomo using (${args.fomo_command})`,
     `* invoke CONSUME using (${args.consume_command})`,
     `* ascend in path (${args.path})`,
     `* ascend as (${args.class})`,
@@ -218,6 +223,7 @@ type DevExternalScript =
   | "looprobot"
   | "sebastian"
   | "pearlo"
+  | "fomo"
   | "crimbo";
 const externalScripts = ["autoscend", "freecandy", "combo", "chrono", "moustacherider"] as const;
 type BuiltExternalScript = (typeof externalScripts)[number];
