@@ -306,6 +306,21 @@ export const farm: () => Quest<Task> = () => ({
       },
     },
     {
+      // fomo is safe to rerun, so a failure is logged and the day goes on.
+      name: "fomo",
+      ready: () => canInteract() && !willAscend() && args.fomo_command !== "",
+      completed: () => get("_halfloopFomo", "") !== "",
+      do: (): void => {
+        try {
+          external("fomo");
+          set("_halfloopFomo", "ran");
+        } catch (e) {
+          print(`fomo failed, carrying on: ${e}`, "red");
+          set("_halfloopFomo", `failed: ${e}`);
+        }
+      },
+    },
+    {
       name: "raffle",
       ready: () => canInteract() && !willAscend(),
       completed: () => availableAmount($item`raffle ticket`) >= RAFFLE_TICKET_COUNT,
