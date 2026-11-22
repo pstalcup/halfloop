@@ -25178,6 +25178,10 @@ var args = Args.create("halfloop", "Loop your brains out (on live tv)", {
     help: "how to invoke pearlo before garbo on sea days, to farm the codpiece pearls (empty to skip)",
     default: "pearlo codpiece"
   }),
+  fomo_command: Args.string({
+    help: "how to invoke fomo after keeping tabs, to buy the Item of the Month (empty to skip)",
+    default: "fomo"
+  }),
   pearl_price: Args.number({
     help: "The most to pay for each unblemished pearl when restocking the codpiece for the sea",
     default: 200_000

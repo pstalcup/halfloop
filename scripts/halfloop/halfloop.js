@@ -25309,6 +25309,10 @@ var args = Args.create("halfloop", "Loop your brains out (on live tv)", {
     help: "how to invoke pearlo before garbo on sea days, to farm the codpiece pearls (empty to skip)",
     default: "pearlo codpiece"
   }),
+  fomo_command: Args.string({
+    help: "how to invoke fomo after keeping tabs, to buy the Item of the Month (empty to skip)",
+    default: "fomo"
+  }),
   pearl_price: Args.number({
     help: "The most to pay for each unblemished pearl when restocking the codpiece for the sea",
     default: 200_000
@@ -25354,7 +25358,7 @@ var args = Args.create("halfloop", "Loop your brains out (on live tv)", {
   })
 });
 function currentArgs(pathArgs) {
-  return ["* Ascend: (".concat(args.ascend, ")"), "* Run PVP fites: (".concat(args.pvp, ")"), args.adventures === 0 ? "* Keep no adventures and nightcap" : "* Keep ".concat(args.adventures, " adventures and do not nightcap"), "* invoke garbo using (".concat(args.garbo_command, ")"), "* invoke keeping-tabs using (".concat(args.keeping_tabs_command, ")"), "* invoke CONSUME using (".concat(args.consume_command, ")"), "* ascend in path (".concat(args.path, ")"), "* ascend as (".concat(args.class, ")"), "* farm mode: (".concat(args.mode, " => ").concat(mode(), ")")].concat(_toConsumableArray(pathArgs), _toConsumableArray(mode() === "crimbo" ? ["* invoke crimbo using (".concat(args.crimbo_command, ")")] : []));
+  return ["* Ascend: (".concat(args.ascend, ")"), "* Run PVP fites: (".concat(args.pvp, ")"), args.adventures === 0 ? "* Keep no adventures and nightcap" : "* Keep ".concat(args.adventures, " adventures and do not nightcap"), "* invoke garbo using (".concat(args.garbo_command, ")"), "* invoke keeping-tabs using (".concat(args.keeping_tabs_command, ")"), "* invoke fomo using (".concat(args.fomo_command, ")"), "* invoke CONSUME using (".concat(args.consume_command, ")"), "* ascend in path (".concat(args.path, ")"), "* ascend as (".concat(args.class, ")"), "* farm mode: (".concat(args.mode, " => ").concat(mode(), ")")].concat(_toConsumableArray(pathArgs), _toConsumableArray(mode() === "crimbo" ? ["* invoke crimbo using (".concat(args.crimbo_command, ")")] : []));
 }
 
 /** Scripts that throw record why in _lastScriptError; pass that cause on. */
@@ -26272,6 +26276,20 @@ var farm = () => ({
         if (require$$0.shopPrice(item) === 999999999999) {
           require$$0.repriceShop(Math.floor(require$$0.mallPrice(item) * 0.95), item);
         }
+      }
+    }
+  }, {
+    // fomo is safe to rerun, so a failure is logged and the day goes on.
+    name: "fomo",
+    ready: () => require$$0.canInteract() && !willAscend() && args.fomo_command !== "",
+    completed: () => get$2("_halfloopFomo", "") !== "",
+    do: () => {
+      try {
+        external("fomo");
+        _set("_halfloopFomo", "ran");
+      } catch (e) {
+        require$$0.print("fomo failed, carrying on: ".concat(e), "red");
+        _set("_halfloopFomo", "failed: ".concat(e));
       }
     }
   }, {

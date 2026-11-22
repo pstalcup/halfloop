@@ -12,4 +12,5 @@ github Pantocyclus/PVP_MAB release
 github Kasekopf/loopstar release
 github Kasekopf/looprobot release
 github pstalcup/sebastian release
+github pstalcup/mafia-fomo release
 github VeeArrKoL/seedfinder
